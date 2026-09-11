@@ -1,0 +1,22 @@
+{
+  "name": "aa-dynamic-server",
+  "version": "1.0.0",
+  "description": "A.A Dynamic Computer Training Center - API server (Express + Supabase/Postgres)",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "dotenv": "^16.4.5",
+    "pdfkit": "^0.15.0",
+    "qrcode": "^1.5.4",
+    "exceljs": "^4.4.0"
+  }
+}
