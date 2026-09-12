@@ -23,8 +23,11 @@ a { color: inherit; }
 img { max-width: 100%; display: block; }
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea {
-  font-family: inherit; font-size: .92rem; padding: .5rem .7rem;
+  font-family: inherit; font-size: 16px; line-height: 1.45; padding: .8rem .9rem;
   border: 1px solid #d7dbe0; border-radius: 8px; width: 100%;
+  min-height: 48px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: block; }
 .form-group { margin-bottom: .9rem; }
@@ -181,7 +184,7 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
     pointer-events: auto;
   }
   .sidebar {
-    position: fixed;
+    position: fixed !important;
     left: 0;
     top: 0;
     bottom: 0;
@@ -216,14 +219,37 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   .landing-buttons { flex-direction: column; align-items: stretch; }
   .btn { width: 100%; }
   .landing-actions { width: 100%; }
-  .split-brand, .split-panel { padding: 2rem 1rem; }
+
+  .split-wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .split-brand, .split-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 2rem 1rem;
+  }
+  .split-brand h1 { font-size: 1.7rem; }
+  .split-brand p.tagline { font-size: .95rem; }
+  .split-card {
+    max-width: 100%;
+    width: 100%;
+  }
+  .split-card h2 { font-size: 1.5rem; }
+  .split-card .card-box {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
   .card, .info-card, .service-card, .contact-card, .contact-form { padding: 1rem; }
   .topbar-title { font-size: 1rem; }
   .topbar-right { flex-wrap: wrap; }
   .topbar { padding-left: 3.2rem; }
 
   input, select, textarea {
-    font-size: 1rem !important;
+    font-size: 16px !important;
     min-height: 48px;
     padding: .8rem .9rem;
   }
@@ -304,10 +330,12 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
 .app-shell { display: flex; min-height: 100vh; }
 .mobile-nav-toggle { display: none; }
 .mobile-nav-overlay { display: none; }
-.sidebar {
-  width: 250px; background: linear-gradient(180deg, var(--brand-green) 0%, var(--brand-green-light) 100%);
-  color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0;
-  transition: transform .25s ease;
+@media (min-width: 901px) {
+  .sidebar {
+    width: 250px; background: linear-gradient(180deg, var(--brand-green) 0%, var(--brand-green-light) 100%);
+    color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0;
+    transition: transform .25s ease; transform: none;
+  }
 }
 .sidebar-brand { padding: 1.25rem 1rem; font-weight: 700; font-size: 1.05rem; border-bottom: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; gap: .5rem; }
 .sidebar-brand i { color: var(--brand-gold); }
