@@ -11,7 +11,7 @@ export default function Payments() {
   useEffect(() => { load(); }, []);
 
   if (!data) return <DashboardLayout title="Payments & Revenue"><p className="text-muted">Loading...</p></DashboardLayout>;
-  const { customers, services, recent, revenue } = data;
+  const { customers, services, recent, intern_receipts, revenue } = data;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +22,51 @@ export default function Payments() {
   };
 
   const handleApprove = async (id) => { await api.post(`/admin/payments/${id}/approve`); load(); };
+
+  const handlePrintInternReceipt = (receipt) => {
+    const content = `
+      <html>
+        <head><title>Receipt - ${receipt.receipt_no}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
+            .box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; }
+            .head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
+            .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-top: 8px; }
+            strong { display: inline-block; min-width: 110px; }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <div class="head">
+              <div>
+                <div style="font-weight: 700; font-size: 20px;">A.A Dynamic Computer Training Center</div>
+                <div style="font-size: 12px; color: #666;">Bakori, Katsina State</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 12px; color: #666;">Receipt No</div>
+                <strong>${receipt.receipt_no}</strong>
+              </div>
+            </div>
+            <div class="row">
+              <div><strong>Student:</strong> ${receipt.intern_name || 'Unknown intern'}</div>
+              <div><strong>School:</strong> ${receipt.school || 'Not provided'}</div>
+              <div><strong>Amount:</strong> ₦${Number(receipt.amount || 0).toLocaleString()}</div>
+              <div><strong>Date:</strong> ${new Date(receipt.verified_at || receipt.created_at).toLocaleDateString()}</div>
+              <div><strong>Status:</strong> ${receipt.status}</div>
+              <div><strong>Purpose:</strong> JAMB Training Registration</div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+  };
 
   return (
     <DashboardLayout title="Payments & Revenue">
@@ -76,6 +121,31 @@ export default function Payments() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div className="card mt-3">
+        <h6 style={{ marginTop: 0 }}>JAMB Intern Receipts</h6>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Receipt</th><th>Intern</th><th>School</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+              {intern_receipts?.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.receipt_no}</td>
+                  <td>{r.intern_name || 'Unknown intern'}</td>
+                  <td>{r.school || 'Not provided'}</td>
+                  <td>₦{Number(r.amount || 0).toLocaleString()}</td>
+                  <td><span className={`badge ${r.status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{r.status}</span></td>
+                  <td>{new Date(r.verified_at || r.created_at).toLocaleDateString()}</td>
+                  <td><button className="btn btn-outline btn-sm" onClick={() => handlePrintInternReceipt(r)}>Print</button></td>
+                </tr>
+              ))}
+              {(!intern_receipts || intern_receipts.length === 0) && (
+                <tr><td colSpan={7} className="text-center text-muted" style={{ padding: '1.5rem' }}>No intern payment receipts yet.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </DashboardLayout>

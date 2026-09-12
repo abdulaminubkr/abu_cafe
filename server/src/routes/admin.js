@@ -371,13 +371,17 @@ router.post('/customers/:id/suspend', staff, async (req, res) => {
 
 // ---------------------------------------------------------------- PAYMENTS / REVENUE
 router.get('/payments', staff, async (req, res) => {
-  const [customers, services, recent, daily, weekly, monthly, yearly] = await Promise.all([
+  const [customers, services, recent, internReceipts, daily, weekly, monthly, yearly] = await Promise.all([
     query('SELECT id, full_name FROM customers ORDER BY full_name'),
     query('SELECT * FROM services WHERE is_active=1 ORDER BY category, name'),
     query(
       `SELECT p.*, s.name service_name, c.full_name customer_name FROM payments p
        LEFT JOIN services s ON s.id=p.service_id LEFT JOIN customers c ON c.id=p.customer_id
        ORDER BY p.id DESC LIMIT 25`
+    ),
+    query(
+      `SELECT p.*, i.full_name intern_name, i.institution school FROM intern_payments p
+       LEFT JOIN interns i ON i.id = p.intern_id ORDER BY p.id DESC LIMIT 25`
     ),
     queryOne("SELECT COALESCE(SUM(amount),0) s FROM payments WHERE status='paid' AND created_at::date = CURRENT_DATE"),
     queryOne("SELECT COALESCE(SUM(amount),0) s FROM payments WHERE status='paid' AND created_at >= (CURRENT_DATE - INTERVAL '6 days')"),
@@ -388,6 +392,7 @@ router.get('/payments', staff, async (req, res) => {
     customers: customers.rows,
     services: services.rows,
     recent: recent.rows,
+    intern_receipts: internReceipts.rows,
     revenue: {
       daily: Number(daily.s), weekly: Number(weekly.s),
       monthly: Number(monthly.s), yearly: Number(yearly.s),

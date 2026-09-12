@@ -20,7 +20,55 @@ export default function InternDashboard() {
     window.open(`/api/intern/certificate/download?token=${token}`, '_blank');
   };
 
-  const handlePrintReceipt = () => window.print();
+  const handlePrintReceipt = () => {
+    if (!receipt) return;
+    const content = `
+      <html>
+        <head><title>Receipt - ${receipt.receipt_no}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
+            .box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; }
+            .head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
+            .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-top: 8px; }
+            strong { display: inline-block; min-width: 110px; }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <div class="head">
+              <div>
+                <div style="font-weight: 700; font-size: 20px;">A.A Dynamic Computer Training Center</div>
+                <div style="font-size: 12px; color: #666;">Bakori, Katsina State</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 12px; color: #666;">Receipt No</div>
+                <strong>${receipt.receipt_no}</strong>
+              </div>
+            </div>
+            <div class="row">
+              <div><strong>Student:</strong> ${me.full_name}</div>
+              <div><strong>Email:</strong> ${me.email}</div>
+              <div><strong>School:</strong> ${me.institution || 'Not provided'}</div>
+              <div><strong>Date:</strong> ${new Date(receipt.verified_at || receipt.created_at).toLocaleDateString()}</div>
+              <div><strong>Amount:</strong> ₦${Number(receipt.amount || 0).toLocaleString()}</div>
+              <div><strong>Status:</strong> ${receipt.status}</div>
+            </div>
+            <div style="margin-top: 18px; border-top: 1px solid #eee; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 700;">Paid for:</span>
+              <strong>JAMB Internship Registration</strong>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+  };
 
   const handlePhotoUpload = async (e) => {
     e.preventDefault();
