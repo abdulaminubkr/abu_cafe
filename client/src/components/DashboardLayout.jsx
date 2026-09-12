@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -43,12 +43,28 @@ export default function DashboardLayout({ title, children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = NAV_BY_ROLE[role] || [];
 
+  useEffect(() => {
+    document.body.classList.toggle('mobile-sidebar-open', mobileOpen);
+    return () => document.body.classList.remove('mobile-sidebar-open');
+  }, [mobileOpen]);
+
+  const toggleMobileNav = () => {
+    setMobileOpen((prev) => {
+      const next = !prev;
+      document.body.classList.toggle('mobile-sidebar-open', next);
+      return next;
+    });
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  const closeMobileNav = () => setMobileOpen(false);
+  const closeMobileNav = () => {
+    setMobileOpen(false);
+    document.body.classList.remove('mobile-sidebar-open');
+  };
 
   return (
     <div className="app-shell">
@@ -56,7 +72,8 @@ export default function DashboardLayout({ title, children }) {
         className="mobile-nav-toggle"
         type="button"
         aria-label="Toggle navigation"
-        onClick={() => setMobileOpen((prev) => !prev)}
+        aria-expanded={mobileOpen}
+        onClick={toggleMobileNav}
       >
         <i className={`fa-solid ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
       </button>
