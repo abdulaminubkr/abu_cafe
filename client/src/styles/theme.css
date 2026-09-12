@@ -4,6 +4,7 @@
   --brand-green-dark: #0a2e22;
   --brand-gold: #c8a951;
   --brand-cream: #f7f5ef;
+  --content-width: 1100px;
 }
 
 * { box-sizing: border-box; }
@@ -64,7 +65,7 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
 .landing-actions { display: flex; align-items: center; gap: .75rem; }
 
 .landing-section {
-  max-width: 1200px; margin: 0 auto; padding: 5rem 5vw;
+  max-width: var(--content-width); margin: 0 auto; padding: 5rem 5vw;
 }
 .landing-hero {
   display: grid; grid-template-columns: 1.2fr .8fr; gap: 2rem; align-items: center; min-height: 68vh;
@@ -128,11 +129,11 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   background: #102520; color: #dfeae7; padding: 2.5rem 5vw 1.5rem;
 }
 .landing-footer-inner {
-  max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+  max-width: var(--content-width); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem;
 }
 .footer-links { display: flex; align-items: center; gap: 1.2rem; }
 .footer-bottom {
-  max-width: 1200px; margin: 1.25rem auto 0; padding-top: 1.1rem; border-top: 1px solid rgba(255,255,255,0.14);
+  max-width: var(--content-width); margin: 1.25rem auto 0; padding-top: 1.1rem; border-top: 1px solid rgba(255,255,255,0.14);
   text-align: center; color: #f4f7f4; font-weight: 600;
 }
 
@@ -143,7 +144,10 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   .split-wrap { flex-direction: column; }
   .split-brand, .split-panel { min-width: 0; }
   .split-card { max-width: 100%; }
-  .app-shell { position: relative; }
+  .app-shell {
+    position: relative;
+    display: block;
+  }
   .mobile-nav-toggle {
     display: inline-flex !important;
     position: fixed;
@@ -217,6 +221,15 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   .topbar-title { font-size: 1rem; }
   .topbar-right { flex-wrap: wrap; }
   .topbar { padding-left: 3.2rem; }
+
+  input, select, textarea {
+    font-size: 1rem !important;
+    min-height: 48px;
+    padding: .8rem .9rem;
+  }
+  textarea { min-height: 110px; }
+  label { font-size: .88rem; }
+  .form-group { margin-bottom: 1rem; }
 }
 
 .badge {
