@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -39,6 +40,7 @@ const NAV_BY_ROLE = {
 export default function DashboardLayout({ title, children }) {
   const { role, user, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const items = NAV_BY_ROLE[role] || [];
 
   const handleLogout = () => {
@@ -46,9 +48,26 @@ export default function DashboardLayout({ title, children }) {
     navigate('/');
   };
 
+  const closeMobileNav = () => setMobileOpen(false);
+
   return (
     <div className="app-shell">
-      <nav className="sidebar">
+      <button
+        className="mobile-nav-toggle"
+        type="button"
+        aria-label="Toggle navigation"
+        onClick={() => setMobileOpen((prev) => !prev)}
+      >
+        <i className={`fa-solid ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
+      </button>
+
+      <div
+        className={`mobile-nav-overlay ${mobileOpen ? 'show' : ''}`}
+        onClick={closeMobileNav}
+        aria-hidden={!mobileOpen}
+      />
+
+      <nav className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <i className="fa-solid fa-graduation-cap" />
           <span>A.A Dynamic</span>
@@ -56,7 +75,7 @@ export default function DashboardLayout({ title, children }) {
         <ul className="sidebar-nav">
           {items.map((item) => (
             <li key={item.to}>
-              <NavLink to={item.to} end={item.end}>
+              <NavLink to={item.to} end={item.end} onClick={closeMobileNav}>
                 <i className={`fa-solid ${item.icon}`} /> {item.label}
               </NavLink>
             </li>
