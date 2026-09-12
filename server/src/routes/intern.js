@@ -36,12 +36,27 @@ router.get('/dashboard', internOnly, async (req, res) => {
     'SELECT * FROM attendance WHERE intern_id=$1 ORDER BY date DESC LIMIT 10',
     [req.user.userId]
   );
+  const receipt = await queryOne(
+    'SELECT * FROM intern_payments WHERE intern_id=$1 ORDER BY id DESC LIMIT 1',
+    [req.user.userId]
+  );
   const { password_hash, ...safeMe } = me;
   res.json({
     me: safeMe, pct, cert,
     notifications: notifications.rows,
     recent_attendance: recentAttendance.rows,
+    receipt: receipt || null,
   });
+});
+
+router.get('/receipt', internOnly, async (req, res) => {
+  const receipt = await queryOne(
+    'SELECT * FROM intern_payments WHERE intern_id=$1 ORDER BY id DESC LIMIT 1',
+    [req.user.userId]
+  );
+  if (!receipt) return res.status(404).json({ error: 'Receipt not found' });
+  const me = await queryOne('SELECT full_name, email, institution FROM interns WHERE id=$1', [req.user.userId]);
+  res.json({ receipt: { ...receipt, intern_name: me.full_name, intern_email: me.email, institution: me.institution } });
 });
 
 router.put('/profile', internOnly, upload.single('photo'), async (req, res) => {

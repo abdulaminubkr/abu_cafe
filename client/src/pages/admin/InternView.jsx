@@ -15,12 +15,14 @@ export default function InternView() {
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <DashboardLayout title="JAMB Intern Profile"><p className="text-muted">Loading...</p></DashboardLayout>;
-  const { intern, attendance, pct, cert } = data;
+  const { intern, attendance, pct, cert, receipt } = data;
 
   const handleSuspend = async () => {
     await api.post(`/admin/interns/${id}/suspend`);
     load();
   };
+
+  const handlePrintReceipt = () => window.print();
 
   const handleIssueCertificate = async (e) => {
     e.preventDefault();
@@ -51,7 +53,7 @@ export default function InternView() {
             <tbody>
               <tr><th>Email</th><td>{intern.email}</td></tr>
               <tr><th>Phone</th><td>{intern.phone}</td></tr>
-              <tr><th>Institution</th><td>{intern.institution}</td></tr>
+              <tr><th>School</th><td>{intern.institution}</td></tr>
               <tr><th>Department</th><td>{intern.department}</td></tr>
               <tr><th>Matric No</th><td>{intern.matric_number}</td></tr>
               <tr><th>Duration</th><td>{intern.it_duration}</td></tr>
@@ -110,6 +112,42 @@ export default function InternView() {
               </form>
             )}
           </div>
+
+          {receipt && (
+            <div className="card mt-3" style={{ background: '#fffaf0', border: '1px solid #f2dfac' }}>
+              <div className="flex-between mb-2">
+                <h6 style={{ margin: 0 }}>Payment Receipt</h6>
+                <button className="btn btn-outline btn-sm" onClick={handlePrintReceipt}>Print</button>
+              </div>
+
+              <div style={{ background: '#fff', border: '1px solid #e8d7a5', borderRadius: 12, padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: 10, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 18 }}>A.A Dynamic Computer Training Center</div>
+                    <div style={{ fontSize: 12, color: '#666' }}>Bakori, Katsina State</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, color: '#666' }}>Receipt No</div>
+                    <strong>{receipt.receipt_no}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: 14 }}>
+                  <div><strong>Intern:</strong> {intern.full_name}</div>
+                  <div><strong>Email:</strong> {intern.email}</div>
+                  <div><strong>School:</strong> {intern.institution || 'Not provided'}</div>
+                  <div><strong>Date:</strong> {new Date(receipt.verified_at || receipt.created_at).toLocaleDateString()}</div>
+                  <div><strong>Amount:</strong> ₦{Number(receipt.amount || 0).toLocaleString()}</div>
+                  <div><strong>Status:</strong> {receipt.status}</div>
+                </div>
+
+                <div style={{ marginTop: 14, borderTop: '1px solid #eee', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700 }}>Paid for:</span>
+                  <strong>JAMB Internship Registration</strong>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

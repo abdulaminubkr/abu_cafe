@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', address: '', password: '' });
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', address: '', school: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,9 +19,9 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/auth/register/customer', form);
+      const res = await api.post('/auth/register/intern', form);
       login(res.data.token, res.data.user, res.data.role);
-      navigate('/customer');
+      navigate('/intern');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -54,6 +54,10 @@ export default function Register() {
               <div className="form-group">
                 <label>Address</label>
                 <input value={form.address} onChange={update('address')} />
+              </div>
+              <div className="form-group">
+                <label>School</label>
+                <input value={form.school} onChange={update('school')} placeholder="e.g. Alhikma Science and Art School Bakori" />
               </div>
               <div className="form-group">
                 <label>Password</label>

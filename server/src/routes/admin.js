@@ -181,6 +181,54 @@ router.post('/interns/:id/suspend', staff, async (req, res) => {
   res.json({ status: newStatus });
 });
 
+router.post('/interns/:id/verify-payment', staff, async (req, res) => {
+  const intern = await queryOne('SELECT * FROM interns WHERE id=$1', [req.params.id]);
+  if (!intern) return res.status(404).json({ error: 'Intern not found' });
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS intern_payments (
+      id SERIAL PRIMARY KEY,
+      intern_id INTEGER UNIQUE NOT NULL REFERENCES interns(id) ON DELETE CASCADE,
+      receipt_no TEXT UNIQUE NOT NULL,
+      amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'paid',
+      verified_by INTEGER REFERENCES admins(id),
+      verified_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  const amount = Number(req.body.amount || 2500);
+  const receiptNo = `JAMB-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+  const existing = await queryOne('SELECT * FROM intern_payments WHERE intern_id=$1', [req.params.id]);
+  const payment = existing
+    ? await queryOne(
+        `UPDATE intern_payments SET receipt_no=$1, amount=$2, status='paid', verified_by=$3, verified_at=NOW() WHERE intern_id=$4 RETURNING *`,
+        [existing.receipt_no || receiptNo, amount, req.user.userId, req.params.id]
+      )
+    : await queryOne(
+        `INSERT INTO intern_payments (intern_id, receipt_no, amount, status, verified_by, verified_at)
+         VALUES ($1, $2, $3, 'paid', $4, NOW()) RETURNING *`,
+        [req.params.id, receiptNo, amount, req.user.userId]
+      );
+
+  const nextStatus = intern.status === 'pending_payment' ? 'active' : intern.status;
+  await query('UPDATE interns SET status=$1 WHERE id=$2', [nextStatus, req.params.id]);
+  await logAction(req.user, 'Verified intern payment', `${intern.full_name} - ${payment.receipt_no}`);
+  res.json({ status: nextStatus, message: 'Payment verified', receipt: payment });
+});
+
+router.get('/interns/:id/receipt', staff, async (req, res) => {
+  const payment = await queryOne(
+    `SELECT p.*, i.full_name, i.institution, i.email FROM intern_payments p
+     JOIN interns i ON i.id = p.intern_id WHERE p.intern_id=$1`,
+    [req.params.id]
+  );
+  if (!payment) return res.status(404).json({ error: 'Receipt not found' });
+  res.json({ receipt: payment });
+});
+
 async function attendancePercentage(internId) {
   const total = await queryOne('SELECT COUNT(*) c FROM attendance WHERE intern_id=$1', [internId]);
   if (Number(total.c) === 0) return 0;

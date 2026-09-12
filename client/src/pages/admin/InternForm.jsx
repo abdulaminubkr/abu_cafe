@@ -6,7 +6,7 @@ import Alert from '../../components/Alert';
 
 const BLANK = {
   full_name: '', gender: 'Male', date_of_birth: '', phone: '', email: '', password: '',
-  address: '', institution: '', department: '', course_of_study: '', matric_number: '',
+  address: '', school: '', institution: '', department: '', course_of_study: '', matric_number: '',
   it_duration: '', start_date: '', end_date: '', guardian_name: '', guardian_phone: '',
   emergency_contact: '', status: 'active',
 };
@@ -24,8 +24,9 @@ export default function InternForm() {
   useEffect(() => {
     if (isEdit) {
       api.get(`/admin/interns/${id}`).then((res) => {
-        setForm({ ...BLANK, ...res.data.intern, password: '' });
-        setExistingPhoto(res.data.intern.photo);
+        const intern = res.data.intern;
+        setForm({ ...BLANK, ...intern, school: intern.institution || '', password: '' });
+        setExistingPhoto(intern.photo);
       });
     }
   }, [id, isEdit]);
@@ -37,7 +38,11 @@ export default function InternForm() {
     setError('');
     setSaving(true);
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v ?? ''));
+    Object.entries(form).forEach(([k, v]) => {
+      if (k === 'school') return;
+      fd.append(k, v ?? '');
+    });
+    fd.append('institution', form.school || form.institution || '');
     if (photo) fd.append('photo', photo);
     try {
       if (isEdit) {
@@ -79,7 +84,7 @@ export default function InternForm() {
         <div className="form-group mb-3"><label>Residential Address</label><input value={form.address || ''} onChange={update('address')} /></div>
 
         <div className="grid grid-cols-4 mb-3">
-          <div className="form-group"><label>Institution</label><input value={form.institution || ''} onChange={update('institution')} /></div>
+          <div className="form-group"><label>School</label><input value={form.school || form.institution || ''} onChange={update('school')} /></div>
           <div className="form-group"><label>Department</label><input value={form.department || ''} onChange={update('department')} /></div>
           <div className="form-group"><label>Course of Study</label><input value={form.course_of_study || ''} onChange={update('course_of_study')} /></div>
           <div className="form-group"><label>Matric Number</label><input value={form.matric_number || ''} onChange={update('matric_number')} /></div>

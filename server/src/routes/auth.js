@@ -57,6 +57,38 @@ router.get('/me', requireAuth(), async (req, res) => {
   res.json({ user: safeUser, role });
 });
 
+// POST /api/auth/register/intern
+router.post('/register/intern', async (req, res) => {
+  const { full_name, email, phone, address, password, school, institution, department, course_of_study, matric_number } = req.body;
+  if (!full_name || !email || !password) {
+    return res.status(400).json({ error: 'Full name, email, and password are required' });
+  }
+  const existing = await queryOne('SELECT id FROM interns WHERE lower(email) = $1', [
+    String(email).toLowerCase(),
+  ]);
+  if (existing) {
+    return res.status(409).json({ error: 'An account with this email already exists' });
+  }
+  const internSchool = school || institution || null;
+  const user = await queryOne(
+    `INSERT INTO interns (full_name, email, phone, address, password_hash, institution, department, course_of_study, matric_number, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending_payment') RETURNING id, full_name, email`,
+    [
+      full_name,
+      String(email).toLowerCase(),
+      phone || null,
+      address || null,
+      hashPassword(password),
+      internSchool,
+      department || null,
+      course_of_study || null,
+      matric_number || null,
+    ]
+  );
+  const token = signToken({ userId: user.id, role: 'intern', name: user.full_name });
+  res.status(201).json({ token, user, role: 'intern' });
+});
+
 // POST /api/auth/register/customer
 router.post('/register/customer', async (req, res) => {
   const { full_name, email, phone, address, password } = req.body;
