@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', address: '', school: '', password: '' });
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', address: '', school: '', matric_number: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +58,10 @@ export default function Register() {
               <div className="form-group">
                 <label>School</label>
                 <input value={form.school} onChange={update('school')} placeholder="e.g. Alhikma Science and Art School Bakori" />
+              </div>
+              <div className="form-group">
+                <label>JAMB Number</label>
+                <input value={form.matric_number} onChange={update('matric_number')} placeholder="e.g. 12345678AB" />
               </div>
               <div className="form-group">
                 <label>Password</label>

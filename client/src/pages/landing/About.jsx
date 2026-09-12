@@ -1,16 +1,16 @@
 const staffMembers = [
   {
-    name: 'Abdulmalik Aminu',
+    name: 'Abubakar Ahmed',
     position: 'Founder & Director',
     image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
   },
   {
-    name: 'Mary Johnson',
+    name: 'Abubakar Ahmed',
     position: 'Operations Manager',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
   },
   {
-    name: 'David Smith',
+    name: 'Abdulmalik Aminu',
     position: 'Training Coordinator',
     image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
   },
