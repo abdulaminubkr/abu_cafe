@@ -55,7 +55,7 @@ export default function InternView() {
               <tr><th>Phone</th><td>{intern.phone}</td></tr>
               <tr><th>School</th><td>{intern.institution}</td></tr>
               <tr><th>Department</th><td>{intern.department}</td></tr>
-              <tr><th>Matric No</th><td>{intern.matric_number}</td></tr>
+              <tr><th>JAMB Number</th><td>{intern.matric_number}</td></tr>
               <tr><th>Duration</th><td>{intern.it_duration}</td></tr>
               <tr><th>Start</th><td>{intern.start_date}</td></tr>
               <tr><th>End</th><td>{intern.end_date}</td></tr>

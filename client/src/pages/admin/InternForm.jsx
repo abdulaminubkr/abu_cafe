@@ -87,7 +87,7 @@ export default function InternForm() {
           <div className="form-group"><label>School</label><input value={form.school || form.institution || ''} onChange={update('school')} /></div>
           <div className="form-group"><label>Department</label><input value={form.department || ''} onChange={update('department')} /></div>
           <div className="form-group"><label>Course of Study</label><input value={form.course_of_study || ''} onChange={update('course_of_study')} /></div>
-          <div className="form-group"><label>Matric Number</label><input value={form.matric_number || ''} onChange={update('matric_number')} /></div>
+          <div className="form-group"><label>JAMB Number</label><input value={form.matric_number || ''} onChange={update('matric_number')} /></div>
         </div>
         <div className="grid grid-cols-3 mb-3">
           <div className="form-group"><label>SIWES / IT Duration</label><input placeholder="e.g. 6 months" value={form.it_duration || ''} onChange={update('it_duration')} /></div>

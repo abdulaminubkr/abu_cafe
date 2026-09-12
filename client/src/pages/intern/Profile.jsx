@@ -68,7 +68,7 @@ export default function InternProfile() {
             <div className="form-group"><label className="small">Guardian Phone</label><input value={me.guardian_phone || ''} onChange={update('guardian_phone')} /></div>
             <div className="form-group"><label className="small">Emergency Contact</label><input value={me.emergency_contact || ''} onChange={update('emergency_contact')} /></div>
           </div>
-          <p className="small text-muted">Institution: {me.institution} &middot; Department: {me.department} &middot; Matric No: {me.matric_number}</p>
+          <p className="small text-muted">School: {me.institution} &middot; Department: {me.department} &middot; JAMB Number: {me.matric_number}</p>
           <Alert type="success" message={message} />
           <button className="btn btn-primary btn-sm">Save Changes</button>
         </form>

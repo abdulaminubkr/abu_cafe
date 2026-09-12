@@ -505,7 +505,7 @@ router.post('/notifications', staff, async (req, res) => {
 const REPORT_DEFS = {
   interns: ['Intern Registration Report',
     'SELECT full_name, email, phone, institution, department, matric_number, status, registration_date FROM interns ORDER BY id',
-    ['Full Name', 'Email', 'Phone', 'Institution', 'Department', 'Matric No', 'Status', 'Registered']],
+    ['Full Name', 'Email', 'Phone', 'School', 'Department', 'JAMB Number', 'Status', 'Registered']],
   customers: ['Customer Registration Report',
     'SELECT full_name, email, phone, status, created_at FROM customers ORDER BY id',
     ['Full Name', 'Email', 'Phone', 'Status', 'Registered']],

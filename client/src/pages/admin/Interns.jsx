@@ -36,7 +36,7 @@ export default function Interns() {
     <DashboardLayout title="JAMB Intern Management">
       <div className="flex-between mb-3" style={{ flexWrap: 'wrap', gap: '.6rem' }}>
         <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-          <input placeholder="Search name, email, matric no..." value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260 }} />
+          <input placeholder="Search name, email, JAMB number..." value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 280 }} />
           <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: 180 }}>
             <option value="">All Status</option>
             <option value="pending_payment">Pending Payment</option>
@@ -51,7 +51,7 @@ export default function Interns() {
       <div className="card">
         <div className="table-wrap">
           <table>
-            <thead><tr><th></th><th>Name</th><th>School</th><th>Matric No</th><th>Phone</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Name</th><th>School</th><th>JAMB No</th><th>Phone</th><th>Status</th><th></th></tr></thead>
             <tbody>
               {interns.map((i) => (
                 <tr key={i.id}>
