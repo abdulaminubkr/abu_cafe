@@ -29,7 +29,7 @@ export default function ForgotPassword() {
       <div className="split-panel">
         <div className="split-card">
           <h2>Reset Password</h2>
-          <p className="subtitle">Enter your email and we'll send a temporary password</p>
+          <p className="subtitle">Enter your email and we'll send a temporary password to your inbox</p>
 
           <div className="card-box">
             <form onSubmit={handleSubmit}>

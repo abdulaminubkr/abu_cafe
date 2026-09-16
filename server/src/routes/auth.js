@@ -1,5 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { query, queryOne } = require('../db');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signToken, requireAuth } = require('../middleware/auth');
@@ -17,6 +18,22 @@ const TEMP_PASSWORDS = new Map();
 
 function tempPasswordKey(role, userId) {
   return `${role}:${userId}`;
+}
+
+function createMailTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
 }
 
 function assertRole(role, res) {
@@ -131,7 +148,6 @@ router.post('/register/customer', async (req, res) => {
 });
 
 // POST /api/auth/forgot-password/:role
-// Simulated: generates a temp password and logs it server-side (no SMTP configured).
 router.post('/forgot-password/:role', async (req, res) => {
   const { role } = req.params;
   if (!assertRole(role, res)) return;
@@ -142,12 +158,39 @@ router.post('/forgot-password/:role', async (req, res) => {
   );
   if (user) {
     const tempPassword = crypto.randomBytes(6).toString('base64url');
+    const transporter = createMailTransporter();
+
+    if (!transporter) {
+      console.error('Forgot-password email was not sent: SMTP configuration is incomplete.');
+      return res.status(503).json({ error: 'Email service is not configured. Please contact the administrator.' });
+    }
+
+    try {
+      await transporter.sendMail({
+        from: process.env.MAIL_FROM || process.env.SMTP_USER,
+        to: user.email,
+        subject: 'Your temporary A.A Dynamic password',
+        text: [
+          `Hello ${user.full_name || 'there'},`,
+          '',
+          'A temporary password was requested for your A.A Dynamic account.',
+          '',
+          `Temporary password: ${tempPassword}`,
+          '',
+          'This password expires in 30 minutes. Your existing password remains unchanged unless you update it.',
+          '',
+          'If you did not request this, you can ignore this email.',
+        ].join('\n'),
+      });
+    } catch (error) {
+      console.error('Forgot-password email failed:', error.message);
+      return res.status(503).json({ error: 'Unable to send the temporary password email. Please try again later.' });
+    }
+
     TEMP_PASSWORDS.set(tempPasswordKey(role, user.id), {
       hash: hashPassword(tempPassword),
       expiresAt: Date.now() + 1000 * 60 * 30,
     });
-    // In production this would be emailed via a real mail provider.
-    console.log(`[EMAIL SIMULATION] To: ${email} | Temporary password: ${tempPassword}`);
   }
   // Always return success, whether or not the email exists (don't leak account existence).
   res.json({
