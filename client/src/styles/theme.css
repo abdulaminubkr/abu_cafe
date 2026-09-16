@@ -29,6 +29,39 @@ input, select, textarea {
   -webkit-appearance: none;
   appearance: none;
 }
+input[type="radio"] {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin: 0;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  background: #fff;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+input[type="radio"]:checked {
+  border-color: var(--brand-green);
+  background: #fff;
+}
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-green);
+  transform: translate(-50%, -50%);
+}
 label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: block; }
 .form-group { margin-bottom: .9rem; }
 

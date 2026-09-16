@@ -13,6 +13,12 @@ const TABLES = {
   customer: 'customers',
 };
 
+const TEMP_PASSWORDS = new Map();
+
+function tempPasswordKey(role, userId) {
+  return `${role}:${userId}`;
+}
+
 function assertRole(role, res) {
   if (!TABLES[role]) {
     res.status(400).json({ error: 'Unknown role' });
@@ -35,16 +41,30 @@ router.post('/login/:role', async (req, res) => {
     [String(email).toLowerCase()]
   );
 
-  if (!user || !verifyPassword(password, user.password_hash)) {
+  const originalPasswordValid = user && verifyPassword(password, user.password_hash);
+  const tempKey = user ? tempPasswordKey(role, user.id) : null;
+  const tempReset = tempKey ? TEMP_PASSWORDS.get(tempKey) : null;
+  const tempPasswordValid = tempReset && Date.now() < tempReset.expiresAt && verifyPassword(password, tempReset.hash);
+
+  if (!user || (!originalPasswordValid && !tempPasswordValid)) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
   if ('status' in user && user.status === 'suspended') {
     return res.status(403).json({ error: 'This account has been suspended. Please contact the centre.' });
   }
 
+  if (tempPasswordValid) {
+    TEMP_PASSWORDS.delete(tempKey);
+  }
+
   const token = signToken({ userId: user.id, role, name: user.full_name });
   const { password_hash, ...safeUser } = user;
-  res.json({ token, user: safeUser, role });
+  res.json({
+    token,
+    user: safeUser,
+    role,
+    temporary_password: !!tempPasswordValid,
+  });
 });
 
 // GET /api/auth/me - restore session on page refresh
@@ -122,15 +142,17 @@ router.post('/forgot-password/:role', async (req, res) => {
   );
   if (user) {
     const tempPassword = crypto.randomBytes(6).toString('base64url');
-    await query(`UPDATE ${TABLES[role]} SET password_hash = $1 WHERE id = $2`, [
-      hashPassword(tempPassword),
-      user.id,
-    ]);
+    TEMP_PASSWORDS.set(tempPasswordKey(role, user.id), {
+      hash: hashPassword(tempPassword),
+      expiresAt: Date.now() + 1000 * 60 * 30,
+    });
     // In production this would be emailed via a real mail provider.
     console.log(`[EMAIL SIMULATION] To: ${email} | Temporary password: ${tempPassword}`);
   }
   // Always return success, whether or not the email exists (don't leak account existence).
-  res.json({ message: 'If that email exists, a temporary password has been sent.' });
+  res.json({
+    message: 'If that email exists, a temporary password has been sent. It will work for 30 minutes and will not replace your current password unless you update it.',
+  });
 });
 
 module.exports = router;

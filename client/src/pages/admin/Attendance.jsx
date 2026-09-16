@@ -16,20 +16,31 @@ export default function Attendance() {
   const load = (date) => {
     api.get('/admin/attendance', { params: { date } }).then((res) => {
       setInterns(res.data.interns);
-      setMarked(res.data.marked);
-      setSelDate(res.data.sel_date);
+      setMarked(res.data.marked || {});
+      setSelDate(res.data.sel_date || date);
+    }).catch((err) => {
+      setMessage(err.response?.data?.error || 'Failed to load attendance.');
     });
   };
 
-  useEffect(() => { load(selDate); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(selDate); }, [selDate]);
 
-  const setStatus = (internId, status) => setMarked({ ...marked, [internId]: status });
+  const setStatus = (internId, status) => {
+    setMarked((prev) => ({ ...prev, [internId]: status }));
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await api.post('/admin/attendance', { date: selDate, statuses: marked });
-    setMessage('Attendance saved.');
-    load(selDate);
+    try {
+      await api.post('/admin/attendance', {
+        date: selDate,
+        statuses: Object.fromEntries(Object.entries(marked).filter(([, value]) => value)),
+      });
+      setMessage('Attendance saved.');
+      load(selDate);
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Attendance could not be saved.');
+    }
   };
 
   return (
@@ -52,8 +63,12 @@ export default function Attendance() {
                     {STATUSES.map((s) => (
                       <td key={s} style={{ textAlign: 'center' }}>
                         <input
-                          type="radio" name={`status_${i.id}`} checked={marked[i.id] === s}
-                          onChange={() => setStatus(i.id, s)} style={{ width: 'auto' }}
+                          type="radio"
+                          name={`status_${i.id}`}
+                          value={s}
+                          checked={String(marked[i.id] || '') === s}
+                          onChange={() => setStatus(i.id, s)}
+                          style={{ width: 'auto' }}
                         />
                       </td>
                     ))}
