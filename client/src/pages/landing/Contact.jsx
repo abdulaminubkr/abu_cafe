@@ -8,9 +8,9 @@ export default function Contact() {
 
       <div className="contact-grid">
         <div className="contact-card">
-          <p><strong>Email:</strong> support@abdulmalikacademy.com</p>
-          <p><strong>Phone:</strong> +234 800 000 0000</p>
-          <p><strong>Location:</strong> Abuja, Nigeria</p>
+          <p><strong>Email:</strong> aadynamiccomputercenter@gmail.com</p>
+          <p><strong>Phone:</strong>07035497511, 08143838397</p>
+          <p><strong>Location:</strong> Bakori LGA, Katsina State,Nigeria</p>
         </div>
 
         <form className="contact-form">

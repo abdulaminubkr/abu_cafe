@@ -21,7 +21,7 @@ export default function Home() {
       <div className="landing-hero-card">
         <div className="mini-stat">
           <span className="mini-stat-label">Active JAMB Interns</span>
-          <strong>1,200+</strong>
+          <strong>50+</strong>
         </div>
         <div className="mini-stat">
           <span className="mini-stat-label">Customer Satisfaction</span>
