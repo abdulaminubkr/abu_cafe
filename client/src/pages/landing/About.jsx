@@ -2,17 +2,17 @@ const staffMembers = [
   {
     name: 'Abubakar Ahmed',
     position: 'Founder & Director',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    image: 'https://i.ibb.co/0bTK9mV/abu.png',
   },
   {
-    name: 'Abubakar Ahmed',
-    position: 'Operations Manager',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
+    name: 'Ibrahim Yusuf (NARARA)',
+    position: 'patron',
+    image: 'https://i.ibb.co/cXk6Bhyf/honorable.png',
   },
   {
     name: 'Abdulmalik Aminu',
     position: 'Training Coordinator',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+    image: 'https://i.ibb.co/1tmhfH5S/3108c11f-6f49-4077-85f6-0b104511ac27-0-watermark.jpg',
   },
 ];
 
