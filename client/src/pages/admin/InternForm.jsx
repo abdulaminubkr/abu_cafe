@@ -4,11 +4,17 @@ import api from '../../api';
 import DashboardLayout from '../../components/DashboardLayout';
 import Alert from '../../components/Alert';
 
+const JAMB_SUBJECTS = [
+  'English Language', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Agricultural Science',
+  'Economics', 'Government', 'Civic Education', 'Geography', 'History', 'Literature in English',
+  'Hausa', 'Islamic Religious Studies', 'Accounting', 'Commerce',
+];
+
 const BLANK = {
   full_name: '', gender: 'Male', date_of_birth: '', phone: '', email: '', password: '',
   address: '', school: '', institution: '', department: '', course_of_study: '', matric_number: '',
-  it_duration: '', start_date: '', end_date: '', guardian_name: '', guardian_phone: '',
-  emergency_contact: '', status: 'active',
+  jamb_subjects: [], it_duration: '', start_date: '', end_date: '', guardian_name: '',
+  guardian_phone: '', emergency_contact: '', status: 'active',
 };
 
 export default function InternForm() {
@@ -25,7 +31,13 @@ export default function InternForm() {
     if (isEdit) {
       api.get(`/admin/interns/${id}`).then((res) => {
         const intern = res.data.intern;
-        setForm({ ...BLANK, ...intern, school: intern.institution || '', password: '' });
+        setForm({
+          ...BLANK,
+          ...intern,
+          school: intern.institution || '',
+          jamb_subjects: Array.isArray(intern.jamb_subjects) ? intern.jamb_subjects : [],
+          password: '',
+        });
         setExistingPhoto(intern.photo);
       });
     }
@@ -33,13 +45,30 @@ export default function InternForm() {
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
+  const updateJambSubject = (subject) => {
+    setForm((current) => {
+      const selected = current.jamb_subjects.includes(subject)
+        ? current.jamb_subjects.filter((item) => item !== subject)
+        : [...current.jamb_subjects, subject];
+      return { ...current, jamb_subjects: selected.slice(0, 4) };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (form.jamb_subjects.length !== 4) {
+      setError('Please select exactly four JAMB subjects.');
+      return;
+    }
     setSaving(true);
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => {
       if (k === 'school') return;
+      if (k === 'jamb_subjects') {
+        form.jamb_subjects.forEach((subject) => fd.append('jamb_subjects', subject));
+        return;
+      }
       fd.append(k, v ?? '');
     });
     fd.append('institution', form.school || form.institution || '');
@@ -88,6 +117,62 @@ export default function InternForm() {
           <div className="form-group"><label>Department</label><input value={form.department || ''} onChange={update('department')} /></div>
           <div className="form-group"><label>Course of Study</label><input value={form.course_of_study || ''} onChange={update('course_of_study')} /></div>
           <div className="form-group"><label>JAMB Number</label><input value={form.matric_number || ''} onChange={update('matric_number')} /></div>
+        </div>
+        <div className="form-group mb-3">
+          <label>JAMB Subject Combination</label>
+          <p className="small text-muted" style={{ marginTop: 0 }}>Select exactly four subjects.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.35rem' }}>
+            {JAMB_SUBJECTS.map((subject) => {
+              const selected = form.jamb_subjects.includes(subject);
+              return (
+                <label
+                  key={subject}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.35rem 0.5rem',
+                    border: selected ? '1px solid #2563eb' : '1px solid #ddd',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    background: selected ? '#e8f1ff' : 'white',
+                    fontSize: '0.82rem',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => updateJambSubject(subject)}
+                    style={{ width: '0.75rem', height: '0.75rem', accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span>{subject}</span>
+                  {selected && (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        marginLeft: 'auto',
+                        display: 'inline-flex',
+                        width: '1rem',
+                        height: '1rem',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        background: '#2563eb',
+                        color: 'white',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+          <small className="text-muted">Selected: {form.jamb_subjects.length}/4</small>
         </div>
         <div className="grid grid-cols-3 mb-3">
           <div className="form-group"><label>SIWES / IT Duration</label><input placeholder="e.g. 6 months" value={form.it_duration || ''} onChange={update('it_duration')} /></div>

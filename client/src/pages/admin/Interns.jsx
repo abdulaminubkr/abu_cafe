@@ -51,7 +51,7 @@ export default function Interns() {
       <div className="card">
         <div className="table-wrap">
           <table>
-            <thead><tr><th></th><th>Name</th><th>School</th><th>JAMB No</th><th>Phone</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Name</th><th>School</th><th>JAMB No</th><th>Subjects</th><th>Training</th><th>Phone</th><th>Status</th><th></th></tr></thead>
             <tbody>
               {interns.map((i) => (
                 <tr key={i.id}>
@@ -63,6 +63,8 @@ export default function Interns() {
                   <td><Link to={`/admin/interns/${i.id}`}>{i.full_name}</Link></td>
                   <td>{i.institution || '—'}</td>
                   <td>{i.matric_number}</td>
+                  <td>{Array.isArray(i.jamb_subjects) ? i.jamb_subjects.join(', ') : '—'}</td>
+                  <td>{[i.training_day, i.training_time].filter(Boolean).join(' · ') || '—'}</td>
                   <td>{i.phone}</td>
                   <td>
                     <span className={`badge ${
@@ -84,7 +86,7 @@ export default function Interns() {
                   </td>
                 </tr>
               ))}
-              {interns.length === 0 && <tr><td colSpan={7} className="text-center text-muted" style={{ padding: '2rem' }}>No JAMB interns found.</td></tr>}
+              {interns.length === 0 && <tr><td colSpan={9} className="text-center text-muted" style={{ padding: '2rem' }}>No JAMB interns found.</td></tr>}
             </tbody>
           </table>
         </div>

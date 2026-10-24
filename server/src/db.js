@@ -27,4 +27,32 @@ async function queryOne(text, params) {
   return result.rows[0];
 }
 
-module.exports = { pool, query, queryOne };
+async function ensureInternApplicationSchema() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('Skipping intern registration schema migration because DATABASE_URL is not set.');
+    return;
+  }
+
+  try {
+    await pool.query(`
+      ALTER TABLE interns
+        ADD COLUMN IF NOT EXISTS jamb_subjects TEXT[] NOT NULL DEFAULT '{}',
+        ADD COLUMN IF NOT EXISTS first_name TEXT,
+        ADD COLUMN IF NOT EXISTS surname TEXT,
+        ADD COLUMN IF NOT EXISTS place_of_birth TEXT,
+        ADD COLUMN IF NOT EXISTS state TEXT,
+        ADD COLUMN IF NOT EXISTS lga TEXT,
+        ADD COLUMN IF NOT EXISTS jamb_profile_code TEXT,
+        ADD COLUMN IF NOT EXISTS bring_laptop TEXT,
+        ADD COLUMN IF NOT EXISTS graduation_year TEXT,
+        ADD COLUMN IF NOT EXISTS training_day TEXT,
+        ADD COLUMN IF NOT EXISTS training_time TEXT,
+        ADD COLUMN IF NOT EXISTS applicant_marked_paid BOOLEAN NOT NULL DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS rules_accepted BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+  } catch (error) {
+    console.warn('Database is not available; starting server without intern schema migration:', error.message);
+  }
+}
+
+module.exports = { pool, query, queryOne, ensureInternApplicationSchema };

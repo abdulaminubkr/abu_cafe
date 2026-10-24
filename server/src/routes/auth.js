@@ -4,6 +4,8 @@ const nodemailer = require('nodemailer');
 const { query, queryOne } = require('../db');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signToken, requireAuth } = require('../middleware/auth');
+const { normalizeJambSubjects } = require('../utils/jambSubjects');
+const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -56,35 +58,40 @@ router.post('/login/:role', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const user = await queryOne(
-    `SELECT * FROM ${TABLES[role]} WHERE lower(email) = $1`,
-    [String(email).toLowerCase()]
-  );
+  try {
+    const user = await queryOne(
+      `SELECT * FROM ${TABLES[role]} WHERE lower(email) = $1`,
+      [String(email).toLowerCase()]
+    );
 
-  const originalPasswordValid = user && verifyPassword(password, user.password_hash);
-  const tempKey = user ? tempPasswordKey(role, user.id) : null;
-  const tempReset = tempKey ? TEMP_PASSWORDS.get(tempKey) : null;
-  const tempPasswordValid = tempReset && Date.now() < tempReset.expiresAt && verifyPassword(password, tempReset.hash);
+    const originalPasswordValid = user && verifyPassword(password, user.password_hash);
+    const tempKey = user ? tempPasswordKey(role, user.id) : null;
+    const tempReset = tempKey ? TEMP_PASSWORDS.get(tempKey) : null;
+    const tempPasswordValid = tempReset && Date.now() < tempReset.expiresAt && verifyPassword(password, tempReset.hash);
 
-  if (!user || (!originalPasswordValid && !tempPasswordValid)) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+    if (!user || (!originalPasswordValid && !tempPasswordValid)) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    if ('status' in user && user.status === 'suspended') {
+      return res.status(403).json({ error: 'This account has been suspended. Please contact the centre.' });
+    }
+
+    if (tempPasswordValid) {
+      TEMP_PASSWORDS.delete(tempKey);
+    }
+
+    const token = signToken({ userId: user.id, role, name: user.full_name });
+    const { password_hash, ...safeUser } = user;
+    return res.json({
+      token,
+      user: safeUser,
+      role,
+      temporary_password: !!tempPasswordValid,
+    });
+  } catch (error) {
+    console.error('Authentication login failed:', error.code || 'UNKNOWN', error.message);
+    return res.status(500).json({ error: 'Unable to log in right now. Please try again later.' });
   }
-  if ('status' in user && user.status === 'suspended') {
-    return res.status(403).json({ error: 'This account has been suspended. Please contact the centre.' });
-  }
-
-  if (tempPasswordValid) {
-    TEMP_PASSWORDS.delete(tempKey);
-  }
-
-  const token = signToken({ userId: user.id, role, name: user.full_name });
-  const { password_hash, ...safeUser } = user;
-  res.json({
-    token,
-    user: safeUser,
-    role,
-    temporary_password: !!tempPasswordValid,
-  });
 });
 
 // GET /api/auth/me - restore session on page refresh
@@ -98,35 +105,99 @@ router.get('/me', requireAuth(), async (req, res) => {
 });
 
 // POST /api/auth/register/intern
-router.post('/register/intern', async (req, res) => {
-  const { full_name, email, phone, address, password, school, institution, department, course_of_study, matric_number } = req.body;
-  if (!full_name || !email || !password) {
-    return res.status(400).json({ error: 'Full name, email, and password are required' });
-  }
-  const existing = await queryOne('SELECT id FROM interns WHERE lower(email) = $1', [
-    String(email).toLowerCase(),
-  ]);
-  if (existing) {
-    return res.status(409).json({ error: 'An account with this email already exists' });
-  }
-  const internSchool = school || institution || null;
-  const user = await queryOne(
-    `INSERT INTO interns (full_name, email, phone, address, password_hash, institution, department, course_of_study, matric_number, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending_payment') RETURNING id, full_name, email`,
-    [
-      full_name,
+router.post('/register/intern', upload.single('passport'), async (req, res) => {
+  try {
+    const {
+      full_name, first_name, surname, email, phone, address, password, school,
+      institution, department, course_of_study, matric_number, gender,
+      jamb_subjects, date_of_birth, place_of_birth, state, lga,
+      jamb_profile_code, bring_laptop, graduation_year, training_day,
+      training_time, parent_name, parent_phone, applicant_marked_paid, rules_accepted,
+    } = req.body;
+    if (!full_name || !email || !password) {
+      return res.status(400).json({ error: 'Full name, email, and password are required' });
+    }
+
+    let normalizedSubjects;
+    try {
+      normalizedSubjects = normalizeJambSubjects(
+        typeof jamb_subjects === 'string' ? JSON.parse(jamb_subjects) : jamb_subjects
+      );
+    } catch (error) {
+      return res.status(400).json({ error: error instanceof SyntaxError ? 'JAMB subjects must be valid JSON.' : error.message });
+    }
+
+    const existing = await queryOne('SELECT id FROM interns WHERE lower(email) = $1', [
       String(email).toLowerCase(),
-      phone || null,
-      address || null,
-      hashPassword(password),
-      internSchool,
-      department || null,
-      course_of_study || null,
-      matric_number || null,
-    ]
-  );
-  const token = signToken({ userId: user.id, role: 'intern', name: user.full_name });
-  res.status(201).json({ token, user, role: 'intern' });
+    ]);
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+
+    const internSchool = school || institution || null;
+    const user = await queryOne(
+      `INSERT INTO interns (
+         full_name, first_name, surname, email, phone, address, password_hash,
+         institution, department, course_of_study, matric_number, gender,
+         date_of_birth, place_of_birth, state, lga, jamb_profile_code,
+         bring_laptop, graduation_year, jamb_subjects, training_day, training_time,
+         guardian_name, guardian_phone, photo, applicant_marked_paid, rules_accepted, status
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+         $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
+         'pending_payment'
+       ) RETURNING id, full_name, email`,
+      [
+        full_name,
+        first_name || null,
+        surname || null,
+        String(email).toLowerCase(),
+        phone || null,
+        address || null,
+        hashPassword(password),
+        internSchool,
+        department || null,
+        course_of_study || null,
+        matric_number || null,
+        gender === 'Female' ? 'Female' : 'Male',
+        date_of_birth || null,
+        place_of_birth || null,
+        state || null,
+        lga || null,
+        jamb_profile_code || null,
+        bring_laptop || null,
+        graduation_year || null,
+        normalizedSubjects,
+        training_day || null,
+        training_time || null,
+        parent_name || null,
+        parent_phone || null,
+        req.file ? req.file.filename : null,
+        applicant_marked_paid === 'true',
+        rules_accepted === 'true',
+      ]
+    );
+
+    const token = signToken({ userId: user.id, role: 'intern', name: user.full_name });
+    res.status(201).json({ token, user, role: 'intern' });
+  } catch (error) {
+    console.error('Intern registration failed:', error);
+
+    const dbErrorMessage = (
+      error && (
+        error.message?.includes('tenant/user') ||
+        error.message?.includes('password authentication failed') ||
+        error.message?.includes('ECONNREFUSED') ||
+        error.message?.includes('ENOTFOUND') ||
+        error.code === 'XX000' ||
+        error.code === 'ECONNREFUSED'
+      )
+    )
+      ? 'Database connection failed. Please contact the administrator or check the database configuration.'
+      : 'Registration failed. Please try again.';
+
+    return res.status(500).json({ error: dbErrorMessage });
+  }
 });
 
 // POST /api/auth/register/customer

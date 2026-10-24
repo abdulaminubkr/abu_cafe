@@ -13,6 +13,7 @@ const publicRoutes = require('./routes/public');
 
 const { PHOTO_DIR } = require('./middleware/upload');
 const { CERT_DIR } = require('./utils/certificates');
+const { ensureInternApplicationSchema } = require('./db');
 
 const app = express();
 
@@ -99,6 +100,9 @@ app.use((err, req, res, next) => {
 // Start server
 // ----------------------------------------------------
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`A.A Dynamic Computer Training Center running on port ${PORT}`);
-});
+ensureInternApplicationSchema()
+  .finally(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`A.A Dynamic Computer Training Center running on port ${PORT}`);
+    });
+  });

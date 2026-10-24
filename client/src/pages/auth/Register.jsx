@@ -1,25 +1,188 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api';
-import BrandPanel from '../../components/BrandPanel';
 import Alert from '../../components/Alert';
 import { useAuth } from '../../context/AuthContext';
+
+const ADDITIONAL_JAMB_SUBJECTS = [
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Economics',
+  'Government',
+  'Literature in English',
+  'Commerce',
+  'Accounting',
+  'Geography',
+  'Agricultural Science',
+  'History',
+  'Islamic Studies',
+  'Christian Religious Studies',
+];
+
+const INITIAL_FORM = {
+  first_name: '',
+  surname: '',
+  date_of_birth: '',
+  place_of_birth: '',
+  state: '',
+  lga: '',
+  phone_number: '',
+  home_address: '',
+  gender: 'Male',
+  email: '',
+  jamb_registration_number: '',
+  jamb_profile_code: '',
+  passport: null,
+  passportPreview: '',
+  bring_laptop: '',
+  password: '',
+  confirm_password: '',
+  school_name: '',
+  graduation_year: '',
+  subjectRows: ['', '', ''],
+  training_day: '',
+  training_time: '',
+  parent_name: '',
+  parent_phone: '',
+};
+
+const timeOptions = [
+  { value: 'MORNING', label: 'MORNING: 10:00 AM – 12:30 PM' },
+  { value: 'AFTERNOON', label: 'AFTERNOON: 2:00 PM – 4:30 PM' },
+  { value: 'EVENING', label: 'EVENING: 4:00 PM – 6:00 PM' },
+];
 
 export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', address: '', school: '', matric_number: '', password: '' });
+  const [form, setForm] = useState(INITIAL_FORM);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    password: false,
+    confirm_password: false,
+  });
+  const [consents, setConsents] = useState({
+    paid: false,
+    rules: false,
+  });
 
-  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const updateField = (field) => (event) => {
+    const value = event.target.value;
+    setForm((current) => ({ ...current, [field]: value }));
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((current) => ({
+      ...current,
+      [field]: !current[field],
+    }));
+  };
+
+  const toggleConsent = (field) => {
+    setConsents((current) => ({
+      ...current,
+      [field]: !current[field],
+    }));
+  };
+
+  const handlePassportChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const isValid = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type) || /\.(jpe?g|png)$/i.test(file.name);
+    if (!isValid) {
+      setError('Only JPG, JPEG, or PNG files are allowed for passport upload.');
+      return;
+    }
     setError('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((current) => ({ ...current, passportPreview: reader.result, passport: file }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const updateSubjectRow = (index, value) => {
+    setForm((current) => {
+      const nextRows = [...current.subjectRows];
+      nextRows[index] = value;
+      return { ...current, subjectRows: nextRows };
+    });
+  };
+
+  const handleDayChange = (day) => {
+    setForm((current) => ({
+      ...current,
+      training_day: day,
+      training_time: day === 'weekend' ? 'EVENING' : current.training_time,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+
+    const subjectList = ['English Language', ...form.subjectRows.filter(Boolean)];
+    if (subjectList.length !== 4) {
+      setError('Please choose exactly three additional JAMB subjects.');
+      return;
+    }
+    if (new Set(subjectList).size !== 4) {
+      setError('Duplicate JAMB subjects are not allowed.');
+      return;
+    }
+    if (!form.training_day) {
+      setError('Please select your preferred training schedule.');
+      return;
+    }
+    if (!form.training_time) {
+      setError('Please select a training time slot.');
+      return;
+    }
+    if (!form.password || form.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (form.password !== form.confirm_password) {
+      setError('Password and confirm password do not match.');
+      return;
+    }
+
+    const payload = {
+      full_name: `${form.first_name} ${form.surname}`.trim(),
+      email: form.email,
+      phone: form.phone_number,
+      address: form.home_address,
+      school: form.school_name,
+      institution: form.school_name,
+      matric_number: form.jamb_registration_number,
+      gender: form.gender,
+      jamb_subjects: subjectList,
+      password: form.password,
+      applicant_marked_paid: consents.paid,
+      rules_accepted: consents.rules,
+      ...form,
+    };
+
+    const registrationData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key === 'passportPreview' || key === 'confirm_password' || key === 'subjectRows') return;
+      if (key === 'passport') {
+        if (value) registrationData.append('passport', value);
+        return;
+      }
+      if (key === 'jamb_subjects') {
+        registrationData.append(key, JSON.stringify(value));
+        return;
+      }
+      if (value !== null && value !== undefined) registrationData.append(key, String(value));
+    });
+
     setLoading(true);
     try {
-      const res = await api.post('/auth/register/intern', form);
+      const res = await api.post('/auth/register/intern', registrationData);
       login(res.data.token, res.data.user, res.data.role);
       navigate('/intern');
     } catch (err) {
@@ -29,58 +192,440 @@ export default function Register() {
     }
   };
 
-  return (
-    <div className="split-wrap">
-      <BrandPanel />
-      <div className="split-panel">
-        <div className="split-card">
-          <h2>Create Account</h2>
-          <p className="subtitle">Your account will be created automatically</p>
+  const clearForm = () => {
+    setForm({ ...INITIAL_FORM });
+    setError('');
+  };
 
-          <div className="card-box">
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Full Name</label>
-                <input value={form.full_name} onChange={update('full_name')} required />
+  const sectionStyle = {
+    background: '#fff',
+    border: '1px solid #dfeafc',
+    borderRadius: 12,
+    padding: '18px 20px',
+    marginBottom: 20,
+    boxShadow: '0 4px 14px rgba(26, 67, 164, 0.06)',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontWeight: 600,
+    color: '#123d70',
+    marginBottom: 8,
+    fontSize: 13,
+  };
+
+  const inputStyle = {
+    width: '100%',
+    border: '1px solid #80acff',
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontSize: 14,
+    background: '#fff',
+    color: '#123',
+    boxSizing: 'border-box',
+  };
+
+  const selectStyle = {
+    ...inputStyle,
+    appearance: 'none',
+  };
+
+  const radioOptionStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: '#f7faff',
+    border: '1px solid #d3e2ff',
+    borderRadius: 8,
+    padding: '10px 12px',
+    minHeight: 44,
+  };
+
+  const getSubjectOptionsForRow = (index) =>
+    ADDITIONAL_JAMB_SUBJECTS.filter(
+      (subject) => !form.subjectRows.some((rowValue, rowIndex) => rowIndex !== index && rowValue === subject)
+    );
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#eef4ff', padding: '32px 16px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 35px rgba(23, 54, 108, 0.08)' }}>
+        <h1 style={{ textAlign: 'center', margin: 0, fontSize: '2rem', color: '#0d4db3', fontWeight: 800, letterSpacing: 0.3 }}>JAMB TRAINING REGISTRATION APPLICATION FORM</h1>
+
+        <form onSubmit={handleSubmit} style={{ marginTop: 20 }}>
+          <section style={sectionStyle}>
+            <div style={{ background: '#e9f1ff', color: '#0e4fb2', borderRadius: 10, padding: '10px 14px', fontWeight: 800, letterSpacing: 0.3, marginBottom: 18 }}>
+              SECTION 1 — FOR APPLICANT USE ONLY
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 260px', gap: 24, alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+                <div>
+                  <label style={labelStyle}>First Name</label>
+                  <input style={inputStyle} value={form.first_name} onChange={updateField('first_name')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Surname</label>
+                  <input style={inputStyle} value={form.surname} onChange={updateField('surname')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date of Birth</label>
+                  <input type="date" style={inputStyle} value={form.date_of_birth} onChange={updateField('date_of_birth')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Place of Birth</label>
+                  <input style={inputStyle} value={form.place_of_birth} onChange={updateField('place_of_birth')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>State</label>
+                  <input style={inputStyle} value={form.state} onChange={updateField('state')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>L.G.A.</label>
+                  <input style={inputStyle} value={form.lga} onChange={updateField('lga')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone Number</label>
+                  <input style={inputStyle} value={form.phone_number} onChange={updateField('phone_number')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email Address</label>
+                  <input type="email" style={inputStyle} value={form.email} onChange={updateField('email')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>JAMB Registration Number</label>
+                  <input style={inputStyle} value={form.jamb_registration_number} onChange={updateField('jamb_registration_number')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>JAMB Profile Code</label>
+                  <input style={inputStyle} value={form.jamb_profile_code} onChange={updateField('jamb_profile_code')} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Gender</label>
+                  <select style={selectStyle} value={form.gender} onChange={updateField('gender')}>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Home Address</label>
+                  <input style={inputStyle} value={form.home_address} onChange={updateField('home_address')} required />
+                </div>
               </div>
-              <div className="form-group">
-                <label>Email Address</label>
-                <input type="email" value={form.email} onChange={update('email')} required />
+
+              <div style={{ border: '1px solid #d8e7ff', borderRadius: 10, background: '#f9fbff', padding: 12 }}>
+                <label style={labelStyle}>Passport Photograph</label>
+                <input type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onChange={handlePassportChange} style={{ width: '100%', border: '1px solid #7eaaff', borderRadius: 8, padding: 8, background: '#fff' }} />
+                <div style={{ marginTop: 12, border: '1px dashed #9dbaf8', borderRadius: 10, background: '#fff', minHeight: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {form.passportPreview ? (
+                    <img src={form.passportPreview} alt="Passport preview" style={{ width: '100%', height: 180, objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ color: '#6b7fa3', fontSize: 13 }}>No passport selected</span>
+                  )}
+                </div>
               </div>
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input value={form.phone} onChange={update('phone')} />
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <label style={{ ...labelStyle, marginBottom: 10 }}>Do you want to bring your laptop during training?</label>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {['Yes', 'No'].map((option) => (
+                  <label key={option} style={{ ...radioOptionStyle, flex: 1, minWidth: 170 }}>
+                    <input type="radio" name="bring_laptop" checked={form.bring_laptop === option} onChange={() => setForm((current) => ({ ...current, bring_laptop: option }))} />
+                    <span>{option}</span>
+                  </label>
+                ))}
               </div>
-              <div className="form-group">
-                <label>Address</label>
-                <input value={form.address} onChange={update('address')} />
+            </div>
+          </section>
+
+          <section style={sectionStyle}>
+            <div style={{ background: '#e9f1ff', color: '#0e4fb2', borderRadius: 10, padding: '10px 14px', fontWeight: 800, letterSpacing: 0.3, marginBottom: 18 }}>
+              SECTION 2
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+              <div>
+                <label style={labelStyle}>School Name</label>
+                <input style={inputStyle} value={form.school_name} onChange={updateField('school_name')} required />
               </div>
-              <div className="form-group">
-                <label>School</label>
-                <input value={form.school} onChange={update('school')} placeholder="e.g. Alhikma Science and Art School Bakori" />
+              <div>
+                <label style={labelStyle}>Graduation Year</label>
+                <input style={inputStyle} value={form.graduation_year} onChange={updateField('graduation_year')} placeholder="e.g. 2026" required />
               </div>
-              <div className="form-group">
-                <label>JAMB Number</label>
-                <input value={form.matric_number} onChange={update('matric_number')} placeholder="e.g. 12345678AB" />
-              </div>
-              <div className="form-group">
-                <label>Password</label>
-                <input type="password" value={form.password} onChange={update('password')} required minLength={6} />
-              </div>
-              <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-                {loading ? 'Creating account...' : 'Register'}
-              </button>
-            </form>
-            <Alert type="danger" message={error} />
-            <p className="helper-text" style={{ marginBottom: 0 }}>
-              Already have an account? <Link to="/login/customer">Login</Link>
+            </div>
+          </section>
+
+          <section style={{ ...sectionStyle, overflow: 'hidden' }}>
+            <div style={{ background: '#e9f1ff', color: '#0e4fb2', borderRadius: 10, padding: '10px 14px', fontWeight: 800, letterSpacing: 0.3, marginBottom: 18, textAlign: 'center' }}>
+              WRITE YOUR JAMB SUBJECTS
+            </div>
+
+            <p style={{ textAlign: 'center', color: '#3c5a8a', marginBottom: 8, marginTop: 0 }}>
+              <em>“English Language is compulsory. Add the remaining three subjects.”</em>
             </p>
+            <p style={{ textAlign: 'center', color: '#5a6f8e', marginBottom: 16, marginTop: 0, fontSize: 12 }}>
+              Accepted subject names: Mathematics, Physics, Chemistry, Biology, Economics, Government, Literature in English, Commerce, Accounting, Geography, Agricultural Science, History, Islamic Studies, Christian Religious Studies.
+            </p>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #b9d2ff', minWidth: 420 }}>
+                <thead>
+                  <tr style={{ background: '#1d5ec8', color: '#fff' }}>
+                    <th style={{ border: '1px solid #b9d2ff', padding: '12px 10px', textAlign: 'center', width: 70 }}>S/N</th>
+                    <th style={{ border: '1px solid #b9d2ff', padding: '12px 10px', textAlign: 'left' }}>SUBJECT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ background: '#f8fbff' }}>
+                    <td style={{ border: '1px solid #b9d2ff', padding: '12px 10px', textAlign: 'center' }}>1</td>
+                    <td style={{ border: '1px solid #b9d2ff', padding: '12px 10px' }}>English Language</td>
+                  </tr>
+                  {form.subjectRows.map((value, index) => (
+                    <tr key={`subject-row-${index}`}>
+                      <td style={{ border: '1px solid #b9d2ff', padding: '12px 10px', textAlign: 'center' }}>{index + 2}</td>
+                      <td style={{ border: '1px solid #b9d2ff', padding: '12px 10px' }}>
+                        <select
+                          style={selectStyle}
+                          value={value}
+                          onChange={(event) => updateSubjectRow(index, event.target.value)}
+                          required={index < 3}
+                        >
+                          <option value="">Select subject</option>
+                          {getSubjectOptionsForRow(index).map((subject) => (
+                            <option key={`${subject}-${index}`} value={subject}>{subject}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section style={sectionStyle}>
+            <label style={{ ...labelStyle, fontSize: 15 }}>Select your preferred schedule for training:</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+              {[
+                { value: 'weekend', label: 'Saturday and Sunday' },
+                { value: 'weekday', label: 'Tuesday and Thursday' },
+              ].map((option) => (
+                <label key={option.value} style={{ ...radioOptionStyle, justifyContent: 'flex-start' }}>
+                  <input type="radio" name="training_day" checked={form.training_day === option.value} onChange={() => handleDayChange(option.value)} />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+
+            {form.training_day === 'weekend' && (
+              <div style={{ marginTop: 14, background: '#ecf7ee', border: '1px solid #bbddc2', borderRadius: 8, color: '#2f6e3f', padding: '10px 12px', fontSize: 14 }}>
+                Evening is compulsory for Saturday and Sunday training. Morning and afternoon are disabled for this schedule.
+              </div>
+            )}
+          </section>
+
+          <section style={sectionStyle}>
+            <label style={{ ...labelStyle, fontSize: 15 }}>Training Time</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+              {timeOptions.map((slot) => {
+                const isDisabled = form.training_day === 'weekend' && slot.value !== 'EVENING';
+                const isChecked = form.training_time === slot.value;
+                return (
+                  <label
+                    key={slot.value}
+                    style={{
+                      ...radioOptionStyle,
+                      opacity: isDisabled ? 0.55 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      borderColor: isChecked ? '#1d5ec8' : '#d3e2ff',
+                      background: isChecked ? '#edf4ff' : '#f7faff',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="training_time"
+                      checked={isChecked}
+                      disabled={isDisabled}
+                      onChange={() => setForm((current) => ({ ...current, training_time: slot.value }))}
+                    />
+                    <span style={{ fontWeight: 700 }}>{slot.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {form.training_day === 'weekend' && (
+              <div style={{ marginTop: 12, color: '#2d6cdf', fontWeight: 600 }}>
+                Selected schedule: Saturday and Sunday — Evening slot is automatically assigned.
+              </div>
+            )}
+          </section>
+
+          <section style={sectionStyle}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+              <div>
+                <label style={labelStyle}>Parent/Guardian Name</label>
+                <input style={inputStyle} value={form.parent_name} onChange={updateField('parent_name')} required />
+              </div>
+              <div>
+                <label style={labelStyle}>Parent/Guardian Phone Number</label>
+                <input style={inputStyle} value={form.parent_phone} onChange={updateField('parent_phone')} required />
+              </div>
+            </div>
+          </section>
+
+          <section style={sectionStyle}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+              <div>
+                <label style={labelStyle}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword.password ? 'text' : 'password'}
+                    style={{ ...inputStyle, paddingRight: 84 }}
+                    value={form.password}
+                    onChange={updateField('password')}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('password')}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: 10,
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#0d4db3',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                    }}
+                  >
+                    {showPassword.password ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Confirm Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword.confirm_password ? 'text' : 'password'}
+                    style={{ ...inputStyle, paddingRight: 84 }}
+                    value={form.confirm_password}
+                    onChange={updateField('confirm_password')}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm_password')}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: 10,
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#0d4db3',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                    }}
+                  >
+                    {showPassword.confirm_password ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section style={{ ...sectionStyle, borderColor: '#9bc5a2', background: '#f7fcf7' }}>
+            <h2 style={{ margin: '0 0 14px', color: '#245c32', fontSize: 18 }}>Payment Details</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, color: '#243b2a' }}>
+              <div><strong>Bank Name:</strong> Zenith Bank</div>
+              <div><strong>Account Name:</strong> A.A Dynamic Computer Training Center Bakori</div>
+              <div><strong>Account Number:</strong> 0116118501</div>
+              <div><strong>Amount to be Paid:</strong> ₦3,500</div>
+            </div>
+            <p style={{ margin: '14px 0 0', color: '#245c32', fontWeight: 700 }}>
+              Come along with your receipt to the training center for payment verification.
+            </p>
+          </section>
+
+          <section style={{ ...sectionStyle, borderColor: '#c9d7ff', background: '#fbfcff' }}>
+            <div style={{ display: 'grid', gap: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: '#123d70', fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={consents.paid} onChange={() => toggleConsent('paid')} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} />
+                <span
+                  style={{
+                    width: 12,
+                    height: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid #0d4db3',
+                    borderRadius: 2,
+                    background: consents.paid ? '#0d4db3' : '#fff',
+                    color: '#fff',
+                    fontSize: 10,
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  {consents.paid ? '✓' : ''}
+                </span>
+                <span>Paid</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: '#123d70', fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={consents.rules} onChange={() => toggleConsent('rules')} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} />
+                <span
+                  style={{
+                    width: 12,
+                    height: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid #0d4db3',
+                    borderRadius: 2,
+                    background: consents.rules ? '#0d4db3' : '#fff',
+                    color: '#fff',
+                    fontSize: 10,
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  {consents.rules ? '✓' : ''}
+                </span>
+                <span>I agree to the organization rules</span>
+              </label>
+            </div>
+          </section>
+
+          {error && (
+            <div style={{ marginBottom: 18 }}>
+              <Alert type="danger" message={error} />
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading || !consents.paid || !consents.rules} style={{ minWidth: 180, opacity: loading || !consents.paid || !consents.rules ? 0.6 : 1 }}>
+              {loading ? 'Submitting...' : 'Submit Registration'}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={clearForm} style={{ minWidth: 140 }}>
+              Clear Form
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => window.print()} disabled={!consents.paid || !consents.rules} style={{ minWidth: 140, opacity: !consents.paid || !consents.rules ? 0.6 : 1 }}>
+              Print Form
+            </button>
           </div>
 
-          <p className="text-center mt-3" style={{ marginBottom: 0 }}>
-            <Link to="/" className="small text-muted"><i className="fa-solid fa-arrow-left" /> Back to portal selection</Link>
-          </p>
-        </div>
+          <div style={{ marginTop: 18, textAlign: 'center' }}>
+            <Link to="/login/customer" style={{ color: '#0d4db3', textDecoration: 'none' }}>
+              Already have an account? Login
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );

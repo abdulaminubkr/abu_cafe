@@ -40,6 +40,31 @@ export default function InternView() {
     window.open(`/api/admin/certificates/${cert.id}/download?token=${token}`, '_blank');
   };
 
+  const applicantFields = [
+    ['First Name', intern.first_name],
+    ['Surname', intern.surname],
+    ['Gender', intern.gender],
+    ['Date of Birth', intern.date_of_birth],
+    ['Place of Birth', intern.place_of_birth],
+    ['State', intern.state],
+    ['L.G.A.', intern.lga],
+    ['Phone Number', intern.phone],
+    ['Email Address', intern.email],
+    ['Home Address', intern.address],
+    ['School Name', intern.institution],
+    ['Graduation Year', intern.graduation_year],
+    ['JAMB Registration Number', intern.matric_number],
+    ['JAMB Profile Code', intern.jamb_profile_code],
+    ['Bring Laptop', intern.bring_laptop],
+    ['Training Days', intern.training_day === 'weekend' ? 'Saturday and Sunday' : intern.training_day === 'weekday' ? 'Tuesday and Thursday' : intern.training_day],
+    ['Training Time', intern.training_time],
+    ['Parent/Guardian Name', intern.guardian_name],
+    ['Parent/Guardian Phone', intern.guardian_phone],
+    ['Applicant Marked Paid', intern.applicant_marked_paid ? 'Yes' : 'No'],
+    ['Organization Rules Accepted', intern.rules_accepted ? 'Yes' : 'No'],
+    ['Application Status', intern.status],
+  ];
+
   return (
     <DashboardLayout title="JAMB Intern Profile">
       <div className="grid grid-cols-2">
@@ -51,14 +76,17 @@ export default function InternView() {
           <span className={`badge ${intern.status === 'active' ? 'badge-success' : intern.status === 'completed' ? 'badge-secondary' : 'badge-danger'}`}>{intern.status}</span>
           <table style={{ marginTop: '1rem', textAlign: 'left' }}>
             <tbody>
-              <tr><th>Email</th><td>{intern.email}</td></tr>
-              <tr><th>Phone</th><td>{intern.phone}</td></tr>
-              <tr><th>School</th><td>{intern.institution}</td></tr>
-              <tr><th>Department</th><td>{intern.department}</td></tr>
-              <tr><th>JAMB Number</th><td>{intern.matric_number}</td></tr>
-              <tr><th>Duration</th><td>{intern.it_duration}</td></tr>
-              <tr><th>Start</th><td>{intern.start_date}</td></tr>
-              <tr><th>End</th><td>{intern.end_date}</td></tr>
+              {applicantFields.map(([label, value]) => (
+                <tr key={label}><th>{label}</th><td>{value || 'Not provided'}</td></tr>
+              ))}
+              <tr><th>JAMB Subjects</th><td>{Array.isArray(intern.jamb_subjects) && intern.jamb_subjects.length ? intern.jamb_subjects.join(', ') : 'Not provided'}</td></tr>
+              <tr><th>Department</th><td>{intern.department || 'Not provided'}</td></tr>
+              <tr><th>Course of Study</th><td>{intern.course_of_study || 'Not provided'}</td></tr>
+              <tr><th>SIWES / IT Duration</th><td>{intern.it_duration || 'Not provided'}</td></tr>
+              <tr><th>Start Date</th><td>{intern.start_date || 'Not provided'}</td></tr>
+              <tr><th>End Date</th><td>{intern.end_date || 'Not provided'}</td></tr>
+              <tr><th>Emergency Contact</th><td>{intern.emergency_contact || 'Not provided'}</td></tr>
+              <tr><th>Application Submitted</th><td>{intern.created_at ? new Date(intern.created_at).toLocaleString() : 'Not available'}</td></tr>
             </tbody>
           </table>
           <div className="flex gap-2 mt-3" style={{ justifyContent: 'center' }}>

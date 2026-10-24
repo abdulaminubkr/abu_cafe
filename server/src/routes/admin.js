@@ -7,6 +7,7 @@ const { hashPassword, verifyPassword } = require('../utils/password');
 const { logAction, notify } = require('../utils/audit');
 const { generateCertificatePdf, safeCertFilename, CERT_DIR } = require('../utils/certificates');
 const { rowsToPdf, rowsToExcel } = require('../utils/reports');
+const { normalizeJambSubjects } = require('../utils/jambSubjects');
 const path = require('path');
 const fs = require('fs');
 
@@ -110,18 +111,19 @@ router.post('/interns', staff, upload.single('photo'), async (req, res) => {
   const f = req.body;
   const photo = req.file ? req.file.filename : null;
   try {
+    const jambSubjects = normalizeJambSubjects(Array.isArray(f.jamb_subjects) ? f.jamb_subjects : [f.jamb_subjects]);
     const intern = await queryOne(
       `INSERT INTO interns
         (photo, full_name, gender, date_of_birth, phone, email, password_hash, address,
-         institution, department, course_of_study, matric_number, it_duration, start_date,
-         end_date, guardian_name, guardian_phone, emergency_contact, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'active')
+         institution, department, course_of_study, matric_number, jamb_subjects, it_duration,
+         start_date, end_date, guardian_name, guardian_phone, emergency_contact, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'active')
        RETURNING *`,
       [photo, f.full_name, f.gender || null, f.date_of_birth || null, f.phone || null,
        String(f.email).toLowerCase(), hashPassword(f.password || 'Intern@123'), f.address || null,
        f.institution || null, f.department || null, f.course_of_study || null, f.matric_number || null,
-       f.it_duration || null, f.start_date || null, f.end_date || null, f.guardian_name || null,
-       f.guardian_phone || null, f.emergency_contact || null]
+       jambSubjects, f.it_duration || null, f.start_date || null, f.end_date || null,
+       f.guardian_name || null, f.guardian_phone || null, f.emergency_contact || null]
     );
     await logAction(req.user, 'Registered intern', f.full_name);
     res.status(201).json({ intern });
@@ -150,16 +152,17 @@ router.put('/interns/:id', staff, upload.single('photo'), async (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Intern not found' });
   const f = req.body;
   const photo = req.file ? req.file.filename : existing.photo;
+  const jambSubjects = normalizeJambSubjects(Array.isArray(f.jamb_subjects) ? f.jamb_subjects : [f.jamb_subjects]);
   const intern = await queryOne(
     `UPDATE interns SET photo=$1, full_name=$2, gender=$3, date_of_birth=$4, phone=$5, email=$6,
-      address=$7, institution=$8, department=$9, course_of_study=$10, matric_number=$11, it_duration=$12,
-      start_date=$13, end_date=$14, guardian_name=$15, guardian_phone=$16, emergency_contact=$17, status=$18
-      WHERE id=$19 RETURNING *`,
+      address=$7, institution=$8, department=$9, course_of_study=$10, matric_number=$11,
+      jamb_subjects=$12, it_duration=$13, start_date=$14, end_date=$15, guardian_name=$16,
+      guardian_phone=$17, emergency_contact=$18, status=$19 WHERE id=$20 RETURNING *`,
     [photo, f.full_name, f.gender || null, f.date_of_birth || null, f.phone || null,
      String(f.email).toLowerCase(), f.address || null, f.institution || null, f.department || null,
-     f.course_of_study || null, f.matric_number || null, f.it_duration || null, f.start_date || null,
-     f.end_date || null, f.guardian_name || null, f.guardian_phone || null, f.emergency_contact || null,
-     f.status || 'active', req.params.id]
+     f.course_of_study || null, f.matric_number || null, jambSubjects, f.it_duration || null,
+     f.start_date || null, f.end_date || null, f.guardian_name || null, f.guardian_phone || null,
+     f.emergency_contact || null, f.status || 'active', req.params.id]
   );
   await logAction(req.user, 'Edited intern', intern.full_name);
   res.json({ intern });
