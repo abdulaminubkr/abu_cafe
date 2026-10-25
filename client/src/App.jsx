@@ -66,7 +66,7 @@ export default function App() {
           <Route path="/superadmin" element={<ProtectedRoute roles={['super_admin']}><SuperAdminDashboard /></ProtectedRoute>} />
           <Route path="/superadmin/admins" element={<ProtectedRoute roles={['super_admin']}><Admins /></ProtectedRoute>} />
           <Route path="/superadmin/logs" element={<ProtectedRoute roles={['super_admin']}><Logs /></ProtectedRoute>} />
-          <Route path="/superadmin/settings" element={<ProtectedRoute roles={['super_admin']}><Settings /></ProtectedRoute>} />
+          <Route path="/superadmin/settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><Settings /></ProtectedRoute>} />
 
           {/* Intern portal */}
           <Route path="/intern" element={<ProtectedRoute roles={['intern']}><InternDashboard /></ProtectedRoute>} />

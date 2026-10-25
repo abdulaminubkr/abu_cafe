@@ -23,6 +23,7 @@ const NAV_BY_ROLE = {
     { to: '/admin/certificates', label: 'Certificates', icon: 'fa-award' },
     { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell' },
     { to: '/admin/reports', label: 'Reports', icon: 'fa-file-lines' },
+    { to: '/superadmin/settings', label: 'Settings', icon: 'fa-gear' },
   ],
   intern: [
     { to: '/intern', label: 'Dashboard', icon: 'fa-gauge', end: true },

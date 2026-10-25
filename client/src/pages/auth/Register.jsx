@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api';
 import Alert from '../../components/Alert';
@@ -54,6 +54,14 @@ const timeOptions = [
   { value: 'EVENING', label: 'EVENING: 4:00 PM – 6:00 PM' },
 ];
 
+const DEFAULT_PAYMENT_SETTINGS = {
+  payment_bank_name: 'Zenith Bank',
+  payment_account_name: 'A.A Dynamic Computer Training Center Bakori',
+  payment_account_number: '0116118501',
+  payment_amount: '3500',
+  payment_note: 'Come along with your receipt to the training center for payment verification.',
+};
+
 export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -68,6 +76,13 @@ export default function Register() {
     paid: false,
     rules: false,
   });
+  const [paymentSettings, setPaymentSettings] = useState(DEFAULT_PAYMENT_SETTINGS);
+
+  useEffect(() => {
+    api.get('/registration-settings')
+      .then((res) => setPaymentSettings((current) => ({ ...current, ...res.data.settings })))
+      .catch(() => {});
+  }, []);
 
   const updateField = (field) => (event) => {
     const value = event.target.value;
@@ -537,13 +552,13 @@ export default function Register() {
           <section style={{ ...sectionStyle, borderColor: '#9bc5a2', background: '#f7fcf7' }}>
             <h2 style={{ margin: '0 0 14px', color: '#245c32', fontSize: 18 }}>Payment Details</h2>
             <div className="registration-payment-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, color: '#243b2a' }}>
-              <div><strong>Bank Name:</strong> Zenith Bank</div>
-              <div><strong>Account Name:</strong> A.A Dynamic Computer Training Center Bakori</div>
-              <div><strong>Account Number:</strong> 0116118501</div>
-              <div><strong>Amount to be Paid:</strong> ₦3,500</div>
+              <div><strong>Bank Name:</strong> {paymentSettings.payment_bank_name}</div>
+              <div><strong>Account Name:</strong> {paymentSettings.payment_account_name}</div>
+              <div><strong>Account Number:</strong> {paymentSettings.payment_account_number}</div>
+              <div><strong>Amount to be Paid:</strong> ₦{Number(paymentSettings.payment_amount || 0).toLocaleString()}</div>
             </div>
             <p style={{ margin: '14px 0 0', color: '#245c32', fontWeight: 700 }}>
-              Come along with your receipt to the training center for payment verification.
+              {paymentSettings.payment_note}
             </p>
           </section>
 

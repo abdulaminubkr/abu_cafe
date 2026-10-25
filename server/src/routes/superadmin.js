@@ -6,6 +6,7 @@ const { logAction } = require('../utils/audit');
 
 const router = express.Router();
 const superOnly = requireAuth('super_admin');
+const settingsManagers = requireAuth('admin', 'super_admin');
 
 router.get('/dashboard', superOnly, async (req, res) => {
   const [totalAdmins, activeAdmins, totalInterns, totalCustomers, monthlyRevenue, logs] = await Promise.all([
@@ -83,14 +84,14 @@ router.get('/logs', superOnly, async (req, res) => {
   res.json({ entries: result.rows });
 });
 
-router.get('/settings', superOnly, async (req, res) => {
+router.get('/settings', settingsManagers, async (req, res) => {
   const result = await query('SELECT * FROM settings');
   const settings = {};
   result.rows.forEach((r) => { settings[r.key] = r.value; });
   res.json({ settings });
 });
 
-router.put('/settings', superOnly, async (req, res) => {
+router.put('/settings', settingsManagers, async (req, res) => {
   const entries = Object.entries(req.body || {});
   for (const [key, value] of entries) {
     await query(

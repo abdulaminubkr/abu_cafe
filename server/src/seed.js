@@ -141,6 +141,11 @@ const DEFAULT_SETTINGS = [
   ['centre_name', 'A.A Dynamic Computer Training Center Bakori'],
   ['centre_address', 'Bakori, Katsina State, Nigeria'],
   ['currency_symbol', '\u20a6'],
+  ['payment_bank_name', 'Zenith Bank'],
+  ['payment_account_name', 'A.A Dynamic Computer Training Center Bakori'],
+  ['payment_account_number', '0116118501'],
+  ['payment_amount', '3500'],
+  ['payment_note', 'Come along with your receipt to the training center for payment verification.'],
 ];
 
 async function run() {

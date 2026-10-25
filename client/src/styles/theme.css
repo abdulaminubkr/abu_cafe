@@ -310,6 +310,66 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   .mobile-nav-overlay { display: none !important; }
 }
 @media (max-width: 600px) {
+  html,
+  body,
+  #root,
+  .app-shell,
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .page-body,
+  .page-body > *,
+  .page-body .card,
+  .page-body form {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .page-body [style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .page-body input:not([type="checkbox"]):not([type="radio"]),
+  .page-body select,
+  .page-body textarea {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .page-body label {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .page-body .flex,
+  .page-body .flex-between {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .page-body img,
+  .page-body canvas,
+  .page-body video {
+    max-width: 100%;
+  }
+
+  .split-wrap,
+  .split-brand,
+  .split-panel,
+  .split-card,
+  .split-card .card-box {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .landing-header { padding-top: .8rem; padding-bottom: .8rem; }
   .landing-nav { gap: .7rem; font-size: .9rem; }
   .landing-buttons { flex-direction: column; align-items: stretch; }
@@ -352,6 +412,12 @@ label { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; display: bloc
   textarea { min-height: 110px; }
   label { font-size: .88rem; }
   .form-group { margin-bottom: 1rem; }
+}
+
+@media (min-width: 768px) {
+  .page-body [style*="grid-template-columns"] {
+    min-width: 0;
+  }
 }
 
 .badge {
