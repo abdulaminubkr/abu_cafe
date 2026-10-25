@@ -227,7 +227,7 @@ export default function Register() {
     try {
       const res = await api.post('/auth/register/intern', registrationData);
       login(res.data.token, res.data.user, res.data.role);
-      navigate('/intern');
+      navigate(res.data.role === 'customer' ? '/customer' : '/intern');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
