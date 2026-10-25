@@ -293,7 +293,7 @@ export default function Register() {
   return (
     <div className="jamb-registration-page" style={{ minHeight: '100vh', background: '#eef4ff', padding: '32px 16px' }}>
       <div className="jamb-registration-card" style={{ maxWidth: 1100, margin: '0 auto', background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 35px rgba(23, 54, 108, 0.08)' }}>
-        <h1 className="jamb-registration-title" style={{ textAlign: 'center', margin: 0, fontSize: '2rem', color: '#0d4db3', fontWeight: 800, letterSpacing: 0.3 }}>JAMB TRAINING REGISTRATION APPLICATION FORM</h1>
+        <h1 className="jamb-registration-title" style={{ textAlign: 'center', margin: 0, fontSize: '2rem', color: '#0d4db3', fontWeight: 800, letterSpacing: 0.3 }}>JAMB/INTERNSHIP TRAINING REGISTRATION APPLICATION FORM</h1>
 
         <form className="jamb-registration-form" onSubmit={handleSubmit} style={{ marginTop: 20 }}>
           <section style={sectionStyle}>
