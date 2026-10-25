@@ -133,6 +133,31 @@ router.post('/register/intern', upload.single('passport'), async (req, res) => {
       }
     }
 
+    if (registrationType === 'intern') {
+      const existing = await queryOne(
+        'SELECT id FROM customers WHERE lower(email) = $1',
+        [String(email).toLowerCase()]
+      );
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this email already exists' });
+      }
+
+      const customer = await queryOne(
+        `INSERT INTO customers (full_name, email, phone, address, password_hash)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, full_name, email, phone, address, status, created_at`,
+        [
+          full_name,
+          String(email).toLowerCase(),
+          phone || null,
+          address || null,
+          hashPassword(password),
+        ]
+      );
+      const token = signToken({ userId: customer.id, role: 'customer', name: customer.full_name });
+      return res.status(201).json({ token, user: customer, role: 'customer' });
+    }
+
     const existing = await queryOne('SELECT id FROM interns WHERE lower(email) = $1', [
       String(email).toLowerCase(),
     ]);
