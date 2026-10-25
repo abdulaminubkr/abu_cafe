@@ -247,18 +247,18 @@ export default function Register() {
     );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#eef4ff', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 35px rgba(23, 54, 108, 0.08)' }}>
-        <h1 style={{ textAlign: 'center', margin: 0, fontSize: '2rem', color: '#0d4db3', fontWeight: 800, letterSpacing: 0.3 }}>JAMB TRAINING REGISTRATION APPLICATION FORM</h1>
+    <div className="jamb-registration-page" style={{ minHeight: '100vh', background: '#eef4ff', padding: '32px 16px' }}>
+      <div className="jamb-registration-card" style={{ maxWidth: 1100, margin: '0 auto', background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 35px rgba(23, 54, 108, 0.08)' }}>
+        <h1 className="jamb-registration-title" style={{ textAlign: 'center', margin: 0, fontSize: '2rem', color: '#0d4db3', fontWeight: 800, letterSpacing: 0.3 }}>JAMB TRAINING REGISTRATION APPLICATION FORM</h1>
 
-        <form onSubmit={handleSubmit} style={{ marginTop: 20 }}>
+        <form className="jamb-registration-form" onSubmit={handleSubmit} style={{ marginTop: 20 }}>
           <section style={sectionStyle}>
             <div style={{ background: '#e9f1ff', color: '#0e4fb2', borderRadius: 10, padding: '10px 14px', fontWeight: 800, letterSpacing: 0.3, marginBottom: 18 }}>
               SECTION 1 — FOR APPLICANT USE ONLY
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 260px', gap: 24, alignItems: 'start' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <div className="registration-applicant-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 260px', gap: 24, alignItems: 'start' }}>
+              <div className="registration-field-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
                 <div>
                   <label style={labelStyle}>First Name</label>
                   <input style={inputStyle} value={form.first_name} onChange={updateField('first_name')} required />
@@ -312,12 +312,12 @@ export default function Register() {
                 </div>
               </div>
 
-              <div style={{ border: '1px solid #d8e7ff', borderRadius: 10, background: '#f9fbff', padding: 12 }}>
+              <div className="registration-passport-card" style={{ border: '1px solid #d8e7ff', borderRadius: 10, background: '#f9fbff', padding: 12 }}>
                 <label style={labelStyle}>Passport Photograph</label>
-                <input type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onChange={handlePassportChange} style={{ width: '100%', border: '1px solid #7eaaff', borderRadius: 8, padding: 8, background: '#fff' }} />
-                <div style={{ marginTop: 12, border: '1px dashed #9dbaf8', borderRadius: 10, background: '#fff', minHeight: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <input className="registration-passport-input" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onChange={handlePassportChange} style={{ width: '100%', border: '1px solid #7eaaff', borderRadius: 8, padding: 8, background: '#fff' }} />
+                <div className="registration-passport-preview" style={{ marginTop: 12, border: '1px dashed #9dbaf8', borderRadius: 10, background: '#fff', minHeight: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {form.passportPreview ? (
-                    <img src={form.passportPreview} alt="Passport preview" style={{ width: '100%', height: 180, objectFit: 'cover' }} />
+                    <img className="registration-passport-image" src={form.passportPreview} alt="Passport preview" style={{ width: '100%', height: 180, objectFit: 'cover' }} />
                   ) : (
                     <span style={{ color: '#6b7fa3', fontSize: 13 }}>No passport selected</span>
                   )}
@@ -343,7 +343,7 @@ export default function Register() {
               SECTION 2
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <div className="registration-two-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
               <div>
                 <label style={labelStyle}>School Name</label>
                 <input style={inputStyle} value={form.school_name} onChange={updateField('school_name')} required />
@@ -405,7 +405,7 @@ export default function Register() {
 
           <section style={sectionStyle}>
             <label style={{ ...labelStyle, fontSize: 15 }}>Select your preferred schedule for training:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <div className="registration-two-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
               {[
                 { value: 'weekend', label: 'Saturday and Sunday' },
                 { value: 'weekday', label: 'Tuesday and Thursday' },
@@ -426,7 +426,7 @@ export default function Register() {
 
           <section style={sectionStyle}>
             <label style={{ ...labelStyle, fontSize: 15 }}>Training Time</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+            <div className="registration-three-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
               {timeOptions.map((slot) => {
                 const isDisabled = form.training_day === 'weekend' && slot.value !== 'EVENING';
                 const isChecked = form.training_time === slot.value;
@@ -461,7 +461,7 @@ export default function Register() {
           </section>
 
           <section style={sectionStyle}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <div className="registration-two-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
               <div>
                 <label style={labelStyle}>Parent/Guardian Name</label>
                 <input style={inputStyle} value={form.parent_name} onChange={updateField('parent_name')} required />
@@ -474,13 +474,13 @@ export default function Register() {
           </section>
 
           <section style={sectionStyle}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <div className="registration-two-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
               <div>
                 <label style={labelStyle}>Password</label>
-                <div style={{ position: 'relative' }}>
+                  <div className="registration-password-control">
                   <input
                     type={showPassword.password ? 'text' : 'password'}
-                    style={{ ...inputStyle, paddingRight: 84 }}
+                      style={inputStyle}
                     value={form.password}
                     onChange={updateField('password')}
                     required
@@ -489,11 +489,8 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('password')}
+                    className="registration-password-toggle"
                     style={{
-                      position: 'absolute',
-                      top: '50%',
-                      right: 10,
-                      transform: 'translateY(-50%)',
                       background: 'transparent',
                       border: 'none',
                       color: '#0d4db3',
@@ -508,10 +505,10 @@ export default function Register() {
               </div>
               <div>
                 <label style={labelStyle}>Confirm Password</label>
-                <div style={{ position: 'relative' }}>
+                  <div className="registration-password-control">
                   <input
                     type={showPassword.confirm_password ? 'text' : 'password'}
-                    style={{ ...inputStyle, paddingRight: 84 }}
+                      style={inputStyle}
                     value={form.confirm_password}
                     onChange={updateField('confirm_password')}
                     required
@@ -520,11 +517,8 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('confirm_password')}
+                    className="registration-password-toggle"
                     style={{
-                      position: 'absolute',
-                      top: '50%',
-                      right: 10,
-                      transform: 'translateY(-50%)',
                       background: 'transparent',
                       border: 'none',
                       color: '#0d4db3',
@@ -542,7 +536,7 @@ export default function Register() {
 
           <section style={{ ...sectionStyle, borderColor: '#9bc5a2', background: '#f7fcf7' }}>
             <h2 style={{ margin: '0 0 14px', color: '#245c32', fontSize: 18 }}>Payment Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, color: '#243b2a' }}>
+            <div className="registration-payment-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, color: '#243b2a' }}>
               <div><strong>Bank Name:</strong> Zenith Bank</div>
               <div><strong>Account Name:</strong> A.A Dynamic Computer Training Center Bakori</div>
               <div><strong>Account Number:</strong> 0116118501</div>
@@ -556,47 +550,11 @@ export default function Register() {
           <section style={{ ...sectionStyle, borderColor: '#c9d7ff', background: '#fbfcff' }}>
             <div style={{ display: 'grid', gap: 12 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: '#123d70', fontSize: 13, cursor: 'pointer' }}>
-                <input type="checkbox" checked={consents.paid} onChange={() => toggleConsent('paid')} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} />
-                <span
-                  style={{
-                    width: 12,
-                    height: 12,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid #0d4db3',
-                    borderRadius: 2,
-                    background: consents.paid ? '#0d4db3' : '#fff',
-                    color: '#fff',
-                    fontSize: 10,
-                    lineHeight: 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  {consents.paid ? '✓' : ''}
-                </span>
+                <input className="registration-consent-checkbox" type="checkbox" checked={consents.paid} onChange={() => toggleConsent('paid')} />
                 <span>Paid</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: '#123d70', fontSize: 13, cursor: 'pointer' }}>
-                <input type="checkbox" checked={consents.rules} onChange={() => toggleConsent('rules')} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} />
-                <span
-                  style={{
-                    width: 12,
-                    height: 12,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid #0d4db3',
-                    borderRadius: 2,
-                    background: consents.rules ? '#0d4db3' : '#fff',
-                    color: '#fff',
-                    fontSize: 10,
-                    lineHeight: 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  {consents.rules ? '✓' : ''}
-                </span>
+                <input className="registration-consent-checkbox" type="checkbox" checked={consents.rules} onChange={() => toggleConsent('rules')} />
                 <span>I agree to the organization rules</span>
               </label>
             </div>

@@ -497,3 +497,157 @@ tbody tr:hover { background: #f8faf9; }
   text-decoration: none; color: #333; font-size: .85rem; cursor: pointer;
 }
 .pagination a.active { background: var(--brand-green); color: #fff; border-color: var(--brand-green); }
+
+body { overflow-x: hidden; }
+
+.jamb-registration-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.jamb-registration-card,
+.jamb-registration-form,
+.jamb-registration-form section,
+.registration-applicant-layout,
+.registration-field-grid,
+.registration-passport-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.jamb-registration-title {
+  font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.registration-applicant-layout,
+.registration-field-grid,
+.registration-two-column-grid,
+.registration-three-column-grid,
+.registration-payment-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.registration-field-grid > div,
+.registration-two-column-grid > div {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.registration-field-grid label,
+.registration-passport-card > label,
+.registration-two-column-grid > div > label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.jamb-registration-form input:not([type="checkbox"]):not([type="radio"]),
+.jamb-registration-form select,
+.jamb-registration-form textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  font-size: 16px !important;
+}
+
+.registration-passport-card {
+  position: static !important;
+  float: none !important;
+}
+
+.registration-passport-input {
+  display: block;
+  min-height: 44px;
+}
+
+.registration-passport-preview {
+  width: 100%;
+  min-height: 0 !important;
+  aspect-ratio: 3 / 4;
+}
+
+.registration-passport-image {
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.registration-password-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.registration-password-control input {
+  flex: 1 1 auto;
+  width: 0 !important;
+  min-width: 0;
+}
+
+.registration-password-toggle {
+  position: static !important;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 10px;
+  transform: none !important;
+}
+
+.jamb-registration-form input.registration-consent-checkbox {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  accent-color: #0d4db3;
+}
+
+.registration-passport-card img,
+.jamb-registration-card img {
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .jamb-registration-page {
+    padding: 16px 10px !important;
+  }
+
+  .jamb-registration-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  .jamb-registration-form section {
+    padding: 14px 12px !important;
+  }
+
+  .jamb-registration-form table {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .registration-applicant-layout {
+    grid-template-columns: minmax(0, 1fr) 260px !important;
+  }
+
+  .registration-field-grid,
+  .registration-two-column-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .registration-three-column-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .registration-payment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
