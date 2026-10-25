@@ -55,9 +55,9 @@ const timeOptions = [
 ];
 
 const DEFAULT_PAYMENT_SETTINGS = {
-  payment_bank_name: 'Zenith Bank',
-  payment_account_name: 'A.A Dynamic Computer Training Center Bakori',
-  payment_account_number: '0116118501',
+  payment_bank_name: 'MONOIEPIONT',
+  payment_account_name: 'ABUBAKAR AHMED',
+  payment_account_number: '6758677018',
   payment_amount: '3500',
   payment_note: 'Come along with your receipt to the training center for payment verification.',
 };
@@ -66,6 +66,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState(INITIAL_FORM);
+  const [registrationType, setRegistrationType] = useState('jamb');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState({
@@ -87,6 +88,19 @@ export default function Register() {
   const updateField = (field) => (event) => {
     const value = event.target.value;
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const updateRegistrationType = (event) => {
+    const nextType = event.target.value;
+    setRegistrationType(nextType);
+    if (nextType === 'intern') {
+      setForm((current) => ({
+        ...current,
+        jamb_registration_number: '',
+        jamb_profile_code: '',
+        subjectRows: ['', '', ''],
+      }));
+    }
   };
 
   const togglePasswordVisibility = (field) => {
@@ -139,14 +153,22 @@ export default function Register() {
     event.preventDefault();
     setError('');
 
-    const subjectList = ['English Language', ...form.subjectRows.filter(Boolean)];
-    if (subjectList.length !== 4) {
-      setError('Please choose exactly three additional JAMB subjects.');
-      return;
-    }
-    if (new Set(subjectList).size !== 4) {
-      setError('Duplicate JAMB subjects are not allowed.');
-      return;
+    const subjectList = registrationType === 'jamb'
+      ? ['English Language', ...form.subjectRows.filter(Boolean)]
+      : null;
+    if (registrationType === 'jamb') {
+      if (subjectList.length !== 4) {
+        setError('Please choose exactly three additional JAMB subjects.');
+        return;
+      }
+      if (new Set(subjectList).size !== 4) {
+        setError('Duplicate JAMB subjects are not allowed.');
+        return;
+      }
+      if (!form.jamb_registration_number || !form.jamb_profile_code) {
+        setError('Please enter your JAMB registration number and profile code.');
+        return;
+      }
     }
     if (!form.training_day) {
       setError('Please select your preferred training schedule.');
@@ -172,13 +194,15 @@ export default function Register() {
       address: form.home_address,
       school: form.school_name,
       institution: form.school_name,
-      matric_number: form.jamb_registration_number,
       gender: form.gender,
-      jamb_subjects: subjectList,
       password: form.password,
       applicant_marked_paid: consents.paid,
       rules_accepted: consents.rules,
       ...form,
+      matric_number: registrationType === 'jamb' ? form.jamb_registration_number : null,
+      jamb_profile_code: registrationType === 'jamb' ? form.jamb_profile_code : null,
+      jamb_subjects: subjectList,
+      registration_type: registrationType,
     };
 
     const registrationData = new FormData();
@@ -189,11 +213,15 @@ export default function Register() {
         return;
       }
       if (key === 'jamb_subjects') {
-        registrationData.append(key, JSON.stringify(value));
+        registrationData.append(key, value === null ? 'null' : JSON.stringify(value));
         return;
       }
       if (value !== null && value !== undefined) registrationData.append(key, String(value));
     });
+    registrationData.set('registration_type', registrationType);
+    registrationData.set('matric_number', registrationType === 'jamb' ? form.jamb_registration_number : '');
+    registrationData.set('jamb_profile_code', registrationType === 'jamb' ? form.jamb_profile_code : '');
+    registrationData.set('jamb_subjects', subjectList === null ? 'null' : JSON.stringify(subjectList));
 
     setLoading(true);
     try {
@@ -209,6 +237,7 @@ export default function Register() {
 
   const clearForm = () => {
     setForm({ ...INITIAL_FORM });
+    setRegistrationType('jamb');
     setError('');
   };
 
@@ -306,14 +335,18 @@ export default function Register() {
                   <label style={labelStyle}>Email Address</label>
                   <input type="email" style={inputStyle} value={form.email} onChange={updateField('email')} required />
                 </div>
-                <div>
-                  <label style={labelStyle}>JAMB Registration Number</label>
-                  <input style={inputStyle} value={form.jamb_registration_number} onChange={updateField('jamb_registration_number')} required />
-                </div>
-                <div>
-                  <label style={labelStyle}>JAMB Profile Code</label>
-                  <input style={inputStyle} value={form.jamb_profile_code} onChange={updateField('jamb_profile_code')} required />
-                </div>
+                {registrationType === 'jamb' && (
+                  <>
+                    <div>
+                      <label style={labelStyle}>JAMB Registration Number</label>
+                      <input style={inputStyle} value={form.jamb_registration_number} onChange={updateField('jamb_registration_number')} required />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>JAMB Profile Code</label>
+                      <input style={inputStyle} value={form.jamb_profile_code} onChange={updateField('jamb_profile_code')} required />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label style={labelStyle}>Gender</label>
                   <select style={selectStyle} value={form.gender} onChange={updateField('gender')}>
@@ -351,6 +384,19 @@ export default function Register() {
                 ))}
               </div>
             </div>
+            <fieldset className="registration-type-group">
+              <legend>I want to register for:</legend>
+              <div className="registration-type-options">
+                <label className="registration-type-option">
+                  <input type="radio" name="registration_type_choice" value="jamb" checked={registrationType === 'jamb'} onChange={updateRegistrationType} />
+                  <span>JAMB Training</span>
+                </label>
+                <label className="registration-type-option">
+                  <input type="radio" name="registration_type_choice" value="intern" checked={registrationType === 'intern'} onChange={updateRegistrationType} />
+                  <span>Internship</span>
+                </label>
+              </div>
+            </fieldset>
           </section>
 
           <section style={sectionStyle}>
@@ -370,6 +416,7 @@ export default function Register() {
             </div>
           </section>
 
+          {registrationType === 'jamb' && (
           <section style={{ ...sectionStyle, overflow: 'hidden' }}>
             <div style={{ background: '#e9f1ff', color: '#0e4fb2', borderRadius: 10, padding: '10px 14px', fontWeight: 800, letterSpacing: 0.3, marginBottom: 18, textAlign: 'center' }}>
               WRITE YOUR JAMB SUBJECTS
@@ -417,6 +464,7 @@ export default function Register() {
               </table>
             </div>
           </section>
+          )}
 
           <section style={sectionStyle}>
             <label style={{ ...labelStyle, fontSize: 15 }}>Select your preferred schedule for training:</label>

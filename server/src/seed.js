@@ -37,14 +37,34 @@ CREATE TABLE IF NOT EXISTS interns (
     photo TEXT, full_name TEXT NOT NULL, gender TEXT, date_of_birth TEXT, phone TEXT,
     email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, address TEXT,
     institution TEXT, department TEXT, course_of_study TEXT, matric_number TEXT,
-    jamb_subjects TEXT[] NOT NULL DEFAULT '{}',
+    jamb_profile_code TEXT,
+    jamb_subjects TEXT[], registration_type TEXT NOT NULL DEFAULT 'jamb'
+      CHECK (registration_type IN ('jamb', 'intern')),
     it_duration TEXT, start_date TEXT, end_date TEXT, guardian_name TEXT,
     guardian_phone TEXT, emergency_contact TEXT,
     registration_date TIMESTAMP NOT NULL DEFAULT NOW(),
     status TEXT NOT NULL DEFAULT 'active',
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-ALTER TABLE interns ADD COLUMN IF NOT EXISTS jamb_subjects TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE interns ADD COLUMN IF NOT EXISTS jamb_subjects TEXT[];
+ALTER TABLE interns ADD COLUMN IF NOT EXISTS registration_type TEXT NOT NULL DEFAULT 'jamb';
+ALTER TABLE interns ALTER COLUMN matric_number DROP NOT NULL;
+ALTER TABLE interns ALTER COLUMN jamb_profile_code DROP NOT NULL;
+ALTER TABLE interns ALTER COLUMN jamb_subjects DROP NOT NULL;
+ALTER TABLE interns ALTER COLUMN jamb_subjects DROP DEFAULT;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'interns'::regclass
+      AND conname = 'interns_registration_type_check'
+  ) THEN
+    ALTER TABLE interns
+      ADD CONSTRAINT interns_registration_type_check
+      CHECK (registration_type IN ('jamb', 'intern'));
+  END IF;
+END
+$$;
 ALTER TABLE interns
   ADD COLUMN IF NOT EXISTS first_name TEXT,
   ADD COLUMN IF NOT EXISTS surname TEXT,

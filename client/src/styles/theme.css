@@ -680,6 +680,50 @@ body { overflow-x: hidden; }
   max-width: 100%;
 }
 
+.registration-type-group {
+  min-width: 0;
+  margin: 18px 0 0;
+  padding: 12px;
+  border: 1px solid #d3e2ff;
+  border-radius: 8px;
+}
+
+.registration-type-group legend {
+  padding: 0 6px;
+  color: #123d70;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.registration-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.registration-type-option {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #d3e2ff;
+  border-radius: 8px;
+  color: #123d70;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.registration-type-option input[type="radio"] {
+  flex: 0 0 20px;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+}
+
 @media (max-width: 600px) {
   .jamb-registration-page {
     padding: 16px 10px !important;
@@ -696,6 +740,12 @@ body { overflow-x: hidden; }
 
   .jamb-registration-form table {
     width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .registration-type-options {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

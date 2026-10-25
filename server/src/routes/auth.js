@@ -114,17 +114,23 @@ router.post('/register/intern', upload.single('passport'), async (req, res) => {
       jamb_profile_code, bring_laptop, graduation_year, training_day,
       training_time, parent_name, parent_phone, applicant_marked_paid, rules_accepted,
     } = req.body;
+    const registrationType = req.body.registration_type || 'jamb';
     if (!full_name || !email || !password) {
       return res.status(400).json({ error: 'Full name, email, and password are required' });
     }
+    if (!['jamb', 'intern'].includes(registrationType)) {
+      return res.status(400).json({ error: 'Registration type must be jamb or intern.' });
+    }
 
-    let normalizedSubjects;
-    try {
-      normalizedSubjects = normalizeJambSubjects(
-        typeof jamb_subjects === 'string' ? JSON.parse(jamb_subjects) : jamb_subjects
-      );
-    } catch (error) {
-      return res.status(400).json({ error: error instanceof SyntaxError ? 'JAMB subjects must be valid JSON.' : error.message });
+    let normalizedSubjects = null;
+    if (registrationType === 'jamb') {
+      try {
+        normalizedSubjects = normalizeJambSubjects(
+          typeof jamb_subjects === 'string' ? JSON.parse(jamb_subjects) : jamb_subjects
+        );
+      } catch (error) {
+        return res.status(400).json({ error: error instanceof SyntaxError ? 'JAMB subjects must be valid JSON.' : error.message });
+      }
     }
 
     const existing = await queryOne('SELECT id FROM interns WHERE lower(email) = $1', [
@@ -141,10 +147,11 @@ router.post('/register/intern', upload.single('passport'), async (req, res) => {
          institution, department, course_of_study, matric_number, gender,
          date_of_birth, place_of_birth, state, lga, jamb_profile_code,
          bring_laptop, graduation_year, jamb_subjects, training_day, training_time,
-         guardian_name, guardian_phone, photo, applicant_marked_paid, rules_accepted, status
+         guardian_name, guardian_phone, photo, applicant_marked_paid, rules_accepted,
+         registration_type, status
        ) VALUES (
          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-         $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
+         $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28,
          'pending_payment'
        ) RETURNING id, full_name, email`,
       [
@@ -158,13 +165,13 @@ router.post('/register/intern', upload.single('passport'), async (req, res) => {
         internSchool,
         department || null,
         course_of_study || null,
-        matric_number || null,
+        registrationType === 'jamb' ? (matric_number || null) : null,
         gender === 'Female' ? 'Female' : 'Male',
         date_of_birth || null,
         place_of_birth || null,
         state || null,
         lga || null,
-        jamb_profile_code || null,
+        registrationType === 'jamb' ? (jamb_profile_code || null) : null,
         bring_laptop || null,
         graduation_year || null,
         normalizedSubjects,
@@ -175,6 +182,7 @@ router.post('/register/intern', upload.single('passport'), async (req, res) => {
         req.file ? req.file.filename : null,
         applicant_marked_paid === 'true',
         rules_accepted === 'true',
+        registrationType,
       ]
     );
 
