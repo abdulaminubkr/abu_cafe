@@ -603,7 +603,7 @@ export default function Register() {
               <div><strong>Bank Name:</strong> {paymentSettings.payment_bank_name}</div>
               <div><strong>Account Name:</strong> {paymentSettings.payment_account_name}</div>
               <div><strong>Account Number:</strong> {paymentSettings.payment_account_number}</div>
-              <div><strong>Amount to be Paid:</strong> ₦{Number(paymentSettings.payment_amount || 0).toLocaleString()}</div>
+              <div><strong>Amount to be Paid:</strong> ₦{Number(registrationType === 'intern' ? 10000 : paymentSettings.payment_amount || 0).toLocaleString()}</div>
             </div>
             <p style={{ margin: '14px 0 0', color: '#245c32', fontWeight: 700 }}>
               {paymentSettings.payment_note}
